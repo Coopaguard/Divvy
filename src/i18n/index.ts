@@ -8,7 +8,7 @@ export const supportedLocales = ['fr', 'en'] as const
 const browserLocale = navigator.language?.split('-')[0] ?? ''
 const defaultLocale = (supportedLocales as readonly string[]).includes(browserLocale)
   ? browserLocale
-  : 'fr'
+  : 'en'
 const rawSaved = localStorage.getItem(LOCALE_STORAGE_KEY)
 const savedLocale = rawSaved && (supportedLocales as readonly string[]).includes(rawSaved)
   ? rawSaved
@@ -17,6 +17,6 @@ const savedLocale = rawSaved && (supportedLocales as readonly string[]).includes
 export const i18n = createI18n({
   legacy: false,
   locale: savedLocale,
-  fallbackLocale: 'fr',
+  fallbackLocale: 'en',
   messages: { fr, en },
 })
