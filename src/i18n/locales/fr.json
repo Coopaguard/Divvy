@@ -1,0 +1,75 @@
+{
+  "app": {
+    "name": "Divvy",
+    "tagline": "Partagez simplement vos dépenses de vacances"
+  },
+  "nav": {
+    "home": "Accueil",
+    "vacations": "Vacances",
+    "people": "Personnes",
+    "expenses": "Dépenses",
+    "results": "Résultats",
+    "export": "Exporter .divvy"
+  },
+  "home": {
+    "resume": "Reprendre",
+    "import": "Importer un fichier .divvy",
+    "new": "Nouvelles vacances"
+  },
+  "vacations": {
+    "title": "Vacances",
+    "fields": {
+      "name": "Titre",
+      "startDate": "Date de début",
+      "endDate": "Date de fin"
+    }
+  },
+  "people": {
+    "title": "Personnes",
+    "add": "Ajouter une personne",
+    "fields": {
+      "name": "Nom",
+      "shares": "Parts",
+      "arrivalDate": "Date d'arrivée",
+      "departureDate": "Date de départ"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "empty": "Aucune personne ajoutée"
+  },
+  "expenses": {
+    "title": "Dépenses",
+    "add": "Ajouter une dépense",
+    "fields": {
+      "payer": "Payeur",
+      "amount": "Montant",
+      "label": "Libellé",
+      "date": "Date"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "empty": "Aucune dépense saisie"
+  },
+  "results": {
+    "title": "Résultats",
+    "chart": "Répartition des payeurs",
+    "settlement": "Qui doit combien à qui"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "loading": "Chargement…",
+    "error": {
+      "import": "Erreur lors de l'import du fichier",
+      "invalidData": "Données invalides"
+    }
+  }
+}

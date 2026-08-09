@@ -1,0 +1,75 @@
+{
+  "app": {
+    "name": "Divvy",
+    "tagline": "Easily split vacation expenses"
+  },
+  "nav": {
+    "home": "Home",
+    "vacations": "Vacation",
+    "people": "People",
+    "expenses": "Expenses",
+    "results": "Results",
+    "export": "Export .divvy"
+  },
+  "home": {
+    "resume": "Resume",
+    "import": "Import a .divvy file",
+    "new": "New vacation"
+  },
+  "vacations": {
+    "title": "Vacation",
+    "fields": {
+      "name": "Title",
+      "startDate": "Start date",
+      "endDate": "End date"
+    }
+  },
+  "people": {
+    "title": "People",
+    "add": "Add person",
+    "fields": {
+      "name": "Name",
+      "shares": "Shares",
+      "arrivalDate": "Arrival date",
+      "departureDate": "Departure date"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "empty": "No people added yet"
+  },
+  "expenses": {
+    "title": "Expenses",
+    "add": "Add expense",
+    "fields": {
+      "payer": "Payer",
+      "amount": "Amount",
+      "label": "Label",
+      "date": "Date"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "empty": "No expenses added yet"
+  },
+  "results": {
+    "title": "Results",
+    "chart": "Payers breakdown",
+    "settlement": "Who owes whom"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading…",
+    "error": {
+      "import": "Error importing file",
+      "invalidData": "Invalid data"
+    }
+  }
+}
