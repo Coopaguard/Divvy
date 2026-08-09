@@ -22,11 +22,18 @@
       "name": "Title",
       "startDate": "Start date",
       "endDate": "End date"
+    },
+    "errors": {
+      "nameRequired": "Title is required",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "endBeforeStart": "End date must be after start date"
     }
   },
   "people": {
     "title": "People",
     "add": "Add person",
+    "confirmDelete": "Delete this person?",
     "fields": {
       "name": "Name",
       "shares": "Shares",
@@ -37,7 +44,14 @@
       "edit": "Edit",
       "delete": "Delete"
     },
-    "empty": "No people added yet"
+    "empty": "No people added yet",
+    "errors": {
+      "nameRequired": "Name is required",
+      "sharesMin": "Shares must be ≥ 1",
+      "arrivalRequired": "Arrival date is required",
+      "departureRequired": "Departure date is required",
+      "departureBeforeArrival": "Departure must be after arrival"
+    }
   },
   "expenses": {
     "title": "Expenses",

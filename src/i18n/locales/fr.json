@@ -22,11 +22,18 @@
       "name": "Titre",
       "startDate": "Date de début",
       "endDate": "Date de fin"
+    },
+    "errors": {
+      "nameRequired": "Le titre est requis",
+      "startDateRequired": "La date de début est requise",
+      "endDateRequired": "La date de fin est requise",
+      "endBeforeStart": "La date de fin doit être après la date de début"
     }
   },
   "people": {
     "title": "Personnes",
     "add": "Ajouter une personne",
+    "confirmDelete": "Supprimer cette personne ?",
     "fields": {
       "name": "Nom",
       "shares": "Parts",
@@ -37,7 +44,14 @@
       "edit": "Modifier",
       "delete": "Supprimer"
     },
-    "empty": "Aucune personne ajoutée"
+    "empty": "Aucune personne ajoutée",
+    "errors": {
+      "nameRequired": "Le nom est requis",
+      "sharesMin": "Les parts doivent être ≥ 1",
+      "arrivalRequired": "La date d'arrivée est requise",
+      "departureRequired": "La date de départ est requise",
+      "departureBeforeArrival": "Le départ doit être après l'arrivée"
+    }
   },
   "expenses": {
     "title": "Dépenses",
