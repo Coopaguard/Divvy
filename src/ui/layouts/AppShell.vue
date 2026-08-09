@@ -4,8 +4,18 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const vacationStore = useVacationStore()
+
+const languages = [
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+]
+
+function setLocale(code: string): void {
+  locale.value = code
+  localStorage.setItem('divvy-locale', code)
+}
 
 const menuOpen = ref(false)
 const activeSection = ref('section-vacations')
@@ -51,6 +61,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
           </button>
         </li>
       </ul>
+      <div class="lang-selector">
+        <button
+          v-for="lang in languages"
+          :key="lang.code"
+          :class="['lang-btn', { active: locale === lang.code }]"
+          :title="lang.label"
+          @click="setLocale(lang.code)"
+        >
+          {{ lang.flag }}
+        </button>
+      </div>
     </nav>
 
     <!-- Mobile: header + burger -->
@@ -72,6 +93,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
           </button>
         </li>
       </ul>
+      <div class="lang-selector fullscreen-lang">
+        <button
+          v-for="lang in languages"
+          :key="lang.code"
+          :class="['lang-btn', { active: locale === lang.code }]"
+          :title="lang.label"
+          @click="setLocale(lang.code)"
+        >
+          {{ lang.flag }}
+        </button>
+      </div>
     </div>
 
     <!-- Main content -->
@@ -231,6 +263,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   background: var(--bg-page);
   z-index: 15;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -257,6 +290,44 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 .fullscreen-link:hover {
   color: var(--primary);
+}
+
+/* Language selector */
+.lang-selector {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: auto;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.lang-btn {
+  background: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 2px 4px;
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+  opacity: 0.5;
+}
+
+.lang-btn:hover {
+  opacity: 0.85;
+}
+
+.lang-btn.active {
+  border-color: var(--primary);
+  opacity: 1;
+}
+
+.fullscreen-lang {
+  margin-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
+  justify-content: center;
+  font-size: 2rem;
 }
 
 /* Desktop breakpoint */
