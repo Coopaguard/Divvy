@@ -1,80 +1,101 @@
-# Agent IA — Guide de préparation (Divvy)
+# Agent IA — Guide de contribution (Divvy)
 
 Ce document définit comment les assistants IA doivent contribuer au projet **Divvy** pendant la phase de préparation.
 
+## Source de vérité documentaire
+
+**Documents de référence** (consulter AVANT toute contribution) :
+- `README.md` : vue d'ensemble du projet
+- `ROADMAP.md` : plan de développement en phases
+- `specs/*.md` : spécifications détaillées par domaine
+
+**Règle anti-duplication** :
+- Ne PAS répéter dans ce fichier ce qui est déjà documenté dans `README.md` ou `specs/*.md`
+- Faire référence explicite aux documents sources
+- Ce fichier contient **uniquement** les règles de contribution et conventions de code
+
 ## Portée de la phase actuelle
 
-Pendant cette phase, les assistants IA **ne doivent créer ou modifier que des fichiers Markdown (`.md`)**, y compris `README.md`.
+Pendant cette phase, les assistants IA **ne doivent créer ou modifier que des fichiers Markdown (`.md`)**.
 
-- Autorisé : `README.md`, `agent.md`, `specs/*.md`
-- Interdit : tout autre type de fichier (`.vue`, `.ts`, `.js`, `.css`, config, etc.)
+- ✅ Autorisé : `README.md`, `agent.md`, `ROADMAP.md`, `specs/*.md`
+- ❌ Interdit : tout autre type de fichier (`.vue`, `.ts`, `.js`, `.css`, config, etc.)
 
-## Objectifs
+## Objectifs de cette phase
 
-1. Clarifier les choix techniques.
-2. Documenter précisément les fonctionnalités.
-3. Définir les règles de calcul métier.
-4. Spécifier UX/UI et structure d'écran.
-5. Préparer un backlog exploitable pour l’implémentation.
+1. Clarifier les choix techniques → voir `specs/01-choix-techno.md`
+2. Définir le design system → voir `specs/02-ui-design-system.md`
+3. Spécifier la structure one-page → voir `specs/03-ui-layout-one-page.md`
+4. Lister les composants UI → voir `specs/04-ui-components.md`
+5. Documenter le déploiement → voir `specs/05-deploiement-github-pages.md`
+6. Préparer un backlog exploitable → voir `ROADMAP.md`
+
+## Terminologie fonctionnelle (uniformisée)
+
+Utiliser systématiquement ces termes dans toute la documentation :
+- **Vacances** (pas "count", "trip", "voyage")
+- **Personnes** (pas "participants", "utilisateurs")
+- **Dépenses** (pas "paiements", "payments")
 
 ## Règles de contribution
 
-- Écrire en **français** pour la documentation produit/projet.
-- Écrire le **code en anglais**.
-- Utiliser des **noms de fonctions explicites** et orientés intention.
-- Découper les fichiers **par domaine métier** (trip, people, payments, settlements, storage, import-export).
-- Éviter les fonctions longues : une responsabilité claire par fonction/module.
-- Préférer des noms lisibles à des abréviations ambiguës.
-- Documenter les décisions importantes et hypothèses.
-- Maintenir la cohérence entre les fichiers `specs/`.
+### Documentation
+- Écrire en **français** pour la documentation produit/projet
+- Écrire le **code en anglais**
+- Utiliser la terminologie uniformisée (Vacances, Personnes, Dépenses)
+- Maintenir la cohérence entre tous les fichiers `specs/`
+- Référencer explicitement les documents sources plutôt que dupliquer
 
-## Règles de code propre (base)
+### Code (future implémentation)
+- Noms de fonctions **explicites** et orientés intention
+- Découpage **par domaine métier** : vacations, people, expenses, settlements, storage, import-export
+- Une responsabilité claire par fonction/module
+- Noms lisibles > abréviations ambiguës
+- Documenter les décisions importantes et hypothèses
 
-- **Single Responsibility** par composant/module.
-- Pas de duplication inutile (DRY pragmatique).
-- Gestion d’erreurs explicite (import invalide, données manquantes, dates incohérentes).
-- Validation d’entrée côté UI avant calcul.
-- Calculs monétaires déterministes (arrondis cohérents et centralisés).
-- Tests unitaires ciblant surtout les règles de répartition.
-- Lisibilité > astuce technique.
+## Règles de code propre
+
+- **Single Responsibility** par composant/module
+- **DRY pragmatique** : pas de duplication inutile
+- **Gestion d'erreurs explicite** : import invalide, données manquantes, dates incohérentes
+- **Validation d'entrée** côté UI avant calcul
+- **Calculs monétaires déterministes** : arrondis cohérents et centralisés
+- **Tests unitaires** ciblant surtout les règles de répartition
+- **Lisibilité > astuce technique**
 
 ## Convention de structure (future implémentation)
 
-Exemple de découpage par domaine :
-- `domains/trip/*`
-- `domains/people/*`
-- `domains/payments/*`
-- `domains/settlement/*`
-- `domains/storage/*`
-- `domains/importExport/*`
-- `ui/components/*`
+Découpage par domaine :
+```
+domains/
+  vacations/     # Gestion des vacances
+  people/        # Gestion des personnes
+  expenses/      # Gestion des dépenses
+  settlement/    # Calculs de répartition
+  storage/       # Persistance IndexedDB
+  importExport/  # Import/export .divvy
+ui/
+  components/    # Composants Vue
+```
 
-## Convention de fichiers `specs/`
+## Internationalisation (i18n)
 
-- `01-choix-techno.md`
-- `02-ui-design-system.md`
-- `03-ui-layout-one-page.md`
-- `04-ui-components.md`
-- `05-deploiement-github-pages.md`
-- (à venir) specs fonctionnelles détaillées, règles de calcul, roadmap
+Prévoir dès le départ la prise en charge **FR / EN** :
+- Structure i18n dans les specs
+- Clés de traduction pour tous les textes UI
+- Déploiement progressif selon `ROADMAP.md` (phase 3)
 
-## Décisions déjà actées
+## Décisions actées
 
-- Stack front : **Vue 3 (SPA)**.
-- Stockage local : **IndexedDB**.
-- Design : simple, moderne, inspiration GitHub.
-- Style visuel : **flat** (pas d’ombres).
-- Couleur primaire : **orange**.
-- Bouton primaire : **ghost** (fond blanc, bordure orange, texte orange).
-- Navigation :
-  - mobile : burger menu **full screen**,
-  - desktop : menu latéral **flottant à gauche**.
-- Déploiement : GitHub Pages, build à chaque merge/push sur `main`.
+Voir `README.md` et `specs/01-choix-techno.md` pour les décisions techniques.
+
+Voir `specs/02-ui-design-system.md` pour les décisions design.
 
 ## Processus de travail
 
-1. Proposer une structure de spec.
-2. Faire valider par l’utilisateur.
-3. Rédiger le(s) fichier(s) `.md` correspondant(s).
-4. Réviser par itération courte.
-5. Préparer l’implémentation seulement après validation des specs.
+1. Consulter `README.md` et `specs/*.md` pertinents
+2. Proposer une structure de spec si nécessaire
+3. Faire valider par l'utilisateur
+4. Rédiger/modifier le(s) fichier(s) `.md`
+5. Vérifier la cohérence avec les autres documents
+6. Préparer l'implémentation seulement après validation des specs
