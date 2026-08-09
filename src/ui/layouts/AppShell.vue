@@ -3,6 +3,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
+import { LOCALE_STORAGE_KEY } from '@/i18n'
 
 const { t, locale } = useI18n()
 const vacationStore = useVacationStore()
@@ -14,7 +15,7 @@ const languages = [
 
 function setLocale(code: string): void {
   locale.value = code
-  localStorage.setItem('divvy-locale', code)
+  localStorage.setItem(LOCALE_STORAGE_KEY, code)
 }
 
 const menuOpen = ref(false)
