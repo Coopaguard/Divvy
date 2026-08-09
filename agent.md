@@ -1,80 +1,128 @@
-# Agent IA — Guide de préparation (Divvy)
+# Agent IA — Guide de contribution (Divvy)
 
-Ce document définit comment les assistants IA doivent contribuer au projet **Divvy** pendant la phase de préparation.
+Ce document définit comment les assistants IA doivent contribuer au projet **Divvy**.
 
-## Portée de la phase actuelle
+## Source de vérité documentaire
 
-Pendant cette phase, les assistants IA **ne doivent créer ou modifier que des fichiers Markdown (`.md`)**, y compris `README.md`.
+**Documents de référence** (consulter AVANT toute contribution) :
+- `README.md` : vue d'ensemble du projet
+- `ROADMAP.md` : plan de développement en phases
+- `specs/*.md` : spécifications détaillées par domaine
 
-- Autorisé : `README.md`, `agent.md`, `specs/*.md`
-- Interdit : tout autre type de fichier (`.vue`, `.ts`, `.js`, `.css`, config, etc.)
+**Règle anti-duplication** :
+- Ne PAS répéter dans ce fichier ce qui est déjà documenté dans `README.md` ou `specs/*.md`
+- Faire référence explicite aux documents sources
+- Ce fichier contient **uniquement** les règles de contribution et conventions de code
 
-## Objectifs
+## Phase actuelle : Implémentation
 
-1. Clarifier les choix techniques.
-2. Documenter précisément les fonctionnalités.
-3. Définir les règles de calcul métier.
-4. Spécifier UX/UI et structure d'écran.
-5. Préparer un backlog exploitable pour l’implémentation.
+La phase de préparation est **terminée**. Les assistants IA peuvent maintenant **créer et modifier tous types de fichiers** nécessaires à l'implémentation.
+
+### Fichiers autorisés
+- ✅ Code source : `.vue`, `.ts`, `.js`, `.css`, `.scss`
+- ✅ Configuration : `package.json`, `vite.config.ts`, `tsconfig.json`, etc.
+- ✅ Tests : `.spec.ts`, `.test.ts`
+- ✅ Documentation : `.md`
+- ✅ Workflows CI/CD : `.github/workflows/*.yml`
+- ✅ Manifeste PWA : `manifest.json`, service worker
+
+### Règles d'implémentation
+- **Toujours consulter** `ROADMAP.md` pour respecter l'ordre des phases
+- **Suivre les spécifications** définies dans `specs/*.md`
+- **Ne pas dévier** des choix techniques actés (Vue 3, IndexedDB, design system)
+- **Documenter** les décisions importantes dans le code ou dans `specs/`
+
+## Objectifs d'implémentation
+
+Suivre la roadmap en 6 phases :
+
+1. **Phase 1** : MVP Vacances + Personnes (stockage local)
+2. **Phase 2** : CI/CD + GitHub Pages
+3. **Phase 3** : Internationalisation FR / EN
+4. **Phase 4** : Saisie des dépenses
+5. **Phase 5** : Vue récapitulative des dépenses
+6. **Phase 6** : Calcul et répartition des dépenses
+
+Voir `ROADMAP.md` pour les détails de chaque phase.
+
+## Terminologie fonctionnelle (uniformisée)
+
+Utiliser systématiquement ces termes dans toute la documentation :
+- **Vacances** (pas "count", "trip", "voyage")
+- **Personnes** (pas "participants", "utilisateurs")
+- **Dépenses** (pas "paiements", "payments")
 
 ## Règles de contribution
 
-- Écrire en **français** pour la documentation produit/projet.
-- Écrire le **code en anglais**.
-- Utiliser des **noms de fonctions explicites** et orientés intention.
-- Découper les fichiers **par domaine métier** (trip, people, payments, settlements, storage, import-export).
-- Éviter les fonctions longues : une responsabilité claire par fonction/module.
-- Préférer des noms lisibles à des abréviations ambiguës.
-- Documenter les décisions importantes et hypothèses.
-- Maintenir la cohérence entre les fichiers `specs/`.
+### Documentation
+- Écrire en **français** pour la documentation produit/projet
+- Écrire le **code en anglais**
+- Utiliser la terminologie uniformisée (Vacances, Personnes, Dépenses)
+- Maintenir la cohérence entre tous les fichiers `specs/`
+- Référencer explicitement les documents sources plutôt que dupliquer
 
-## Règles de code propre (base)
+### Code
+- **Code en anglais** (noms de variables, fonctions, commentaires)
+- **Documentation produit en français** (README, specs, commentaires utilisateur)
+- Utiliser la terminologie uniformisée dans les commentaires : Vacances, Personnes, Dépenses
+- Noms de fonctions **explicites** et orientés intention
+- Découpage **par domaine métier** : vacations, people, expenses, settlements, storage, import-export
+- Une responsabilité claire par fonction/module
+- Noms lisibles > abréviations ambiguës
+- Documenter les décisions importantes et hypothèses
 
-- **Single Responsibility** par composant/module.
-- Pas de duplication inutile (DRY pragmatique).
-- Gestion d’erreurs explicite (import invalide, données manquantes, dates incohérentes).
-- Validation d’entrée côté UI avant calcul.
-- Calculs monétaires déterministes (arrondis cohérents et centralisés).
-- Tests unitaires ciblant surtout les règles de répartition.
-- Lisibilité > astuce technique.
+## Règles de code propre
 
-## Convention de structure (future implémentation)
+- **Single Responsibility** par composant/module
+- **DRY pragmatique** : pas de duplication inutile
+- **Gestion d'erreurs explicite** : import invalide, données manquantes, dates incohérentes
+- **Validation d'entrée** côté UI avant calcul
+- **Calculs monétaires déterministes** : arrondis cohérents et centralisés
+- **Tests unitaires** ciblant surtout les règles de répartition
+- **Lisibilité > astuce technique**
 
-Exemple de découpage par domaine :
-- `domains/trip/*`
-- `domains/people/*`
-- `domains/payments/*`
-- `domains/settlement/*`
-- `domains/storage/*`
-- `domains/importExport/*`
-- `ui/components/*`
+## Convention de structure
 
-## Convention de fichiers `specs/`
+Découpage par domaine (à respecter) :
+```
+src/
+  domains/
+    vacations/     # Gestion des vacances
+    people/        # Gestion des personnes
+    expenses/      # Gestion des dépenses
+    settlement/    # Calculs de répartition
+    storage/       # Persistance IndexedDB
+    importExport/  # Import/export .divvy
+  ui/
+    components/    # Composants Vue
+    layouts/       # Layouts (AppShell, etc.)
+    assets/        # CSS, images, fonts
+  i18n/
+    locales/       # Fichiers de traduction FR/EN
+  App.vue          # Composant racine
+  main.ts          # Point d'entrée
+```
 
-- `01-choix-techno.md`
-- `02-ui-design-system.md`
-- `03-ui-layout-one-page.md`
-- `04-ui-components.md`
-- `05-deploiement-github-pages.md`
-- (à venir) specs fonctionnelles détaillées, règles de calcul, roadmap
+## Internationalisation (i18n)
 
-## Décisions déjà actées
+Prise en charge **FR / EN** dès le départ :
+- Utiliser **Vue I18n**
+- Structure des clés : `<domaine>.<composant>.<clé>`
+- Fichiers : `src/i18n/locales/fr.json` et `src/i18n/locales/en.json`
+- Tous les textes UI doivent être internationalisés
+- Déploiement progressif selon `ROADMAP.md` (phase 3)
 
-- Stack front : **Vue 3 (SPA)**.
-- Stockage local : **IndexedDB**.
-- Design : simple, moderne, inspiration GitHub.
-- Style visuel : **flat** (pas d’ombres).
-- Couleur primaire : **orange**.
-- Bouton primaire : **ghost** (fond blanc, bordure orange, texte orange).
-- Navigation :
-  - mobile : burger menu **full screen**,
-  - desktop : menu latéral **flottant à gauche**.
-- Déploiement : GitHub Pages, build à chaque merge/push sur `main`.
+## Processus de travail (implémentation)
 
-## Processus de travail
+1. **Identifier la phase** en cours dans `ROADMAP.md`
+2. **Consulter les specs** pertinentes dans `specs/*.md`
+3. **Proposer une structure** de fichiers si nécessaire
+4. **Implémenter** en suivant les conventions de code
+5. **Tester** localement (npm run dev, npm run build)
+6. **Commit** avec messages clairs et référence à la phase
+7. **Documenter** les décisions importantes dans le code ou `specs/`
 
-1. Proposer une structure de spec.
-2. Faire valider par l’utilisateur.
-3. Rédiger le(s) fichier(s) `.md` correspondant(s).
-4. Réviser par itération courte.
-5. Préparer l’implémentation seulement après validation des specs.
+### Workflow Git
+- Branches : `feature/<phase>-<description>` (ex: `feature/phase1-vacation-form`)
+- Commits : messages en anglais, clairs et atomiques
+- Push régulier pour permettre la revue continue

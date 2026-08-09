@@ -4,34 +4,31 @@
 
 Déployer automatiquement la dernière version de Divvy sur GitHub Pages après chaque merge/push sur `main`.
 
-## Règles attendues
+## Configuration
 
-- Trigger CI/CD : `push` sur la branche `main`.
-- Le pipeline doit :
-  1. installer les dépendances,
-  2. lancer le build,
-  3. publier l’artefact sur GitHub Pages.
-- La page publique doit toujours refléter la **dernière version buildée** de `main`.
+### Trigger CI/CD
+- Push sur la branche `main`
 
-## Paramétrage GitHub attendu
+### Pipeline
+1. Installer les dépendances
+2. Lancer le build
+3. Publier l'artefact sur GitHub Pages
 
-- Dans les settings du repository :
-  - Source GitHub Pages = **GitHub Actions**.
-- Workflow de déploiement dédié (ex: `.github/workflows/deploy-pages.yml`).
+### Paramétrage GitHub
+- Settings du repository → Source GitHub Pages = **GitHub Actions**
+- Workflow : `.github/workflows/deploy-pages.yml`
 
-## URL de démo (exemple)
+## URL de démo
 
 `https://coopaguard.github.io/divvy/`
 
-> Note : cette URL est un exemple validé pour la doc et pourra être ajustée.
-
-## README
-
-Le `README.md` doit contenir un lien visible vers la GitHub Page.
-
 ## Critères de validation
 
-- Un merge sur `main` déclenche bien le workflow.
-- Le job de build passe.
-- Le job de déploiement passe.
-- La nouvelle version est visible sur l’URL Pages.
+- Merge sur `main` déclenche bien le workflow
+- Job de build passe
+- Job de déploiement passe
+- Nouvelle version visible sur l'URL Pages
+
+## Référence
+
+Voir `ROADMAP.md` phase 2 pour le détail de cette étape.
