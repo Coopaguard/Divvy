@@ -79,7 +79,8 @@
     "settlement": "Who owes whom",
     "totalsByPerson": "Total paid per person",
     "paid": "Total paid",
-    "empty": "No expense entered yet"
+    "empty": "No expense entered yet",
+    "others": "1 other | {count} others"
   },
   "common": {
     "save": "Save",

@@ -50,6 +50,10 @@ function amount(cents: number): string {
     <p v-if="!hasSomethingToShow" class="empty-state">{{ t('results.empty') }}</p>
 
     <template v-else>
+      <!-- Chart slot: it shares the "is there anything to show" test above, so
+           the figure can never appear over an empty set. -->
+      <slot />
+
       <h3 class="subsection-title">{{ t('results.totalsByPerson') }}</h3>
       <table class="totals-table">
         <thead>

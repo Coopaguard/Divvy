@@ -79,7 +79,8 @@
     "settlement": "Qui doit combien à qui",
     "totalsByPerson": "Total payé par personne",
     "paid": "Total payé",
-    "empty": "Aucune dépense saisie pour le moment"
+    "empty": "Aucune dépense saisie pour le moment",
+    "others": "1 autre | {count} autres"
   },
   "common": {
     "save": "Enregistrer",
