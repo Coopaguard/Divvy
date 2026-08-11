@@ -1,4 +1,4 @@
-// Tests: SettlementView — shares table, per-day option, transfers
+// Tests: SettlementView — shares table, presence option, transfers
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
@@ -25,12 +25,12 @@ function addPerson(id: string, name: string, shares = 1, arrival = '2025-07-01',
   usePeopleStore().people.push(person)
 }
 
-function addExpense(payerId: string, amountCents: number) {
+function addExpense(payerId: string, amountCents: number, date = '2025-07-02') {
   return useExpenseStore().addExpense('vac-1', {
     payerId,
     amountCents,
     label: 'X',
-    date: '2025-07-02',
+    date,
   })
 }
 
@@ -133,7 +133,7 @@ describe('SettlementView', () => {
     expect(wrapper.findAll('.transfer').length).toBeLessThanOrEqual(3)
   })
 
-  describe('per-day option', () => {
+  describe('presence option', () => {
     it('is off by default and hides the days column', async () => {
       await selectVacation()
       addPerson('p1', 'Alice')
@@ -148,23 +148,40 @@ describe('SettlementView', () => {
       expect(wrapper.text()).not.toContain('Days')
     })
 
-    it('splits by shares × days once ticked', async () => {
+    it('spares someone an expense made after they left', async () => {
       await selectVacation()
-      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10') // 10 days
-      addPerson('p2', 'Bob', 1, '2025-07-06', '2025-07-10') //  5 days
-      await addExpense('p1', 3000)
+      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10')
+      addPerson('p2', 'Bob', 1, '2025-07-01', '2025-07-02')
+      // Dated the 3rd — Bob was already gone.
+      await addExpense('p1', 3000, '2025-07-03')
 
       const wrapper = mountView()
       await flushPromises()
-
       await wrapper.find('input[type="checkbox"]').setValue(true)
       await flushPromises()
 
       const rows = wrapper.findAll('.settlement-table tbody tr')
-      // 15 share-days for 30 € → 2 €/day. Alice 20 €, Bob 10 €.
-      expect(rows[0]!.text()).toContain('10') // days
-      expect(rows[0]!.findAll('td')[3]!.text()).toContain('20')
-      expect(rows[1]!.findAll('td')[3]!.text()).toContain('10')
+      const bob = rows.find((row) => row.text().includes('Bob'))!
+      expect(bob.find('.balance').text()).toMatch(/0[.,]00/)
+      expect(wrapper.findAll('.transfer')).toHaveLength(0)
+    })
+
+    it('charges only the expenses someone was there for', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10')
+      addPerson('p2', 'Bob', 1, '2025-07-01', '2025-07-02')
+      await addExpense('p1', 1000, '2025-07-02') // both present
+      await addExpense('p1', 1000, '2025-07-08') // Alice alone
+
+      const wrapper = mountView()
+      await flushPromises()
+      await wrapper.find('input[type="checkbox"]').setValue(true)
+      await flushPromises()
+
+      const rows = wrapper.findAll('.settlement-table tbody tr')
+      const bob = rows.find((row) => row.text().includes('Bob'))!
+      // Half of the first expense only.
+      expect(bob.findAll('td')[3]!.text()).toContain('5.00')
     })
 
     it('shows the days column once ticked', async () => {
@@ -191,9 +208,9 @@ describe('SettlementView', () => {
       await wrapper.find('input[type="checkbox"]').setValue(true)
       await flushPromises()
 
-      expect(useVacationStore().splitMethod).toBe('shareDays')
+      expect(useVacationStore().splitMethod).toBe('presence')
       expect(vi.mocked(vacationStorage.save)).toHaveBeenLastCalledWith(
-        expect.objectContaining({ id: created?.id, splitMethod: 'shareDays' }),
+        expect.objectContaining({ id: created?.id, splitMethod: 'presence' }),
       )
     })
 
@@ -216,7 +233,7 @@ describe('SettlementView', () => {
     it('starts ticked when the vacation was saved that way', async () => {
       const store = useVacationStore()
       await selectVacation()
-      await store.setSplitMethod('shareDays')
+      await store.setSplitMethod('presence')
       addPerson('p1', 'Alice')
       await addExpense('p1', 1000)
 

@@ -2,10 +2,13 @@
 
 /** How each person's share of the total is worked out. */
 export type SplitMethod =
-  /** Parts seules : chacun paie au prorata de ses parts. */
+  /** Parts seules : chacun paie au prorata de ses parts, dates ignorées. */
   | 'shares'
-  /** Parts × jours de présence : une part coûte un prix par jour. */
-  | 'shareDays'
+  /**
+   * Présence : chaque dépense n'est partagée qu'entre les personnes présentes
+   * le jour où elle a été faite, au prorata de leurs parts.
+   */
+  | 'presence'
 
 export const DEFAULT_SPLIT_METHOD: SplitMethod = 'shares'
 
@@ -14,10 +17,8 @@ export interface Balance {
   personId: string
   name: string
   shares: number
-  /** Days counted for this person — always 1 under the `shares` method. */
+  /** Days of presence, clipped to the vacation — shown, never used as a weight. */
   days: number
-  /** Weight used in the split: shares, or shares × days. */
-  weight: number
   /** Their share of the total spend. */
   owedCents: number
   /** What they actually paid out. */

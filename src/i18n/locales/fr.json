@@ -115,14 +115,14 @@
   "settlement": {
     "title": "Remboursements",
     "empty": "Ajoutez des personnes et des dépenses pour calculer les remboursements",
-    "perDay": "Calculer au prorata des jours de présence",
-    "perDayHint": "Une part coûte un prix par jour : chacun paie selon ses parts et le nombre de jours où il était là.",
     "sharesTitle": "Quote-part de chacun",
     "transfersTitle": "Virements à effectuer",
     "days": "Jours",
     "owed": "Quote-part",
     "balance": "Solde",
     "allSquare": "Tout le monde est à jour, aucun remboursement nécessaire.",
-    "transferCount": "1 virement suffit à tout solder | {count} virements suffisent à tout solder"
+    "transferCount": "1 virement suffit à tout solder | {count} virements suffisent à tout solder",
+    "presence": "Ne partager chaque dépense qu’entre les présents ce jour-là",
+    "presenceHint": "Une dépense n’est comptée que pour les personnes présentes à sa date, au prorata de leurs parts. Quelqu’un reparti la veille ne paie donc pas la dépense du lendemain."
   }
 }

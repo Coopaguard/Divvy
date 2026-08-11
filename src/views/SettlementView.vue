@@ -19,11 +19,11 @@ const expenseStore = useExpenseStore()
 
 const failure = ref<string | null>(null)
 
-const perDay = computed({
-  get: () => vacationStore.splitMethod === 'shareDays',
+const byPresence = computed({
+  get: () => vacationStore.splitMethod === 'presence',
   set: async (checked: boolean) => {
     failure.value = null
-    const saved = await vacationStore.setSplitMethod(checked ? 'shareDays' : 'shares')
+    const saved = await vacationStore.setSplitMethod(checked ? 'presence' : 'shares')
     if (!saved) failure.value = t('common.error.saveFailed')
   },
 })
@@ -74,10 +74,10 @@ function personName(id: string): string {
 
     <template v-else>
       <label class="option">
-        <input v-model="perDay" type="checkbox" />
+        <input v-model="byPresence" type="checkbox" />
         <span>
-          <span class="option-label">{{ t('settlement.perDay') }}</span>
-          <span class="option-hint">{{ t('settlement.perDayHint') }}</span>
+          <span class="option-label">{{ t('settlement.presence') }}</span>
+          <span class="option-hint">{{ t('settlement.presenceHint') }}</span>
         </span>
       </label>
 
@@ -90,7 +90,7 @@ function personName(id: string): string {
             <tr>
               <th>{{ t('people.fields.name') }}</th>
               <th class="numeric">{{ t('people.fields.shares') }}</th>
-              <th v-if="perDay" class="numeric">{{ t('settlement.days') }}</th>
+              <th v-if="byPresence" class="numeric">{{ t('settlement.days') }}</th>
               <th class="numeric">{{ t('settlement.owed') }}</th>
               <th class="numeric">{{ t('results.paid') }}</th>
               <th class="numeric">{{ t('settlement.balance') }}</th>
@@ -100,7 +100,7 @@ function personName(id: string): string {
             <tr v-for="balance in sortedBalances" :key="balance.personId">
               <td>{{ balance.name }}</td>
               <td class="numeric">{{ balance.shares }}</td>
-              <td v-if="perDay" class="numeric">{{ balance.days }}</td>
+              <td v-if="byPresence" class="numeric">{{ balance.days }}</td>
               <td class="numeric">{{ amount(balance.owedCents) }}</td>
               <td class="numeric">{{ amount(balance.paidCents) }}</td>
               <td
@@ -116,7 +116,7 @@ function personName(id: string): string {
           </tbody>
           <tfoot>
             <tr>
-              <td :colspan="perDay ? 3 : 2">{{ t('expenses.total') }}</td>
+              <td :colspan="byPresence ? 3 : 2">{{ t('expenses.total') }}</td>
               <td class="numeric total">{{ amount(totalCents) }}</td>
               <td class="numeric total">{{ amount(totalCents) }}</td>
               <td />

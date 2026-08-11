@@ -11,7 +11,8 @@
 // transferts soldent la situation au centime près.
 
 import { distribute } from '@/domains/shared/allocation'
-import { DEFAULT_SPLIT_METHOD, type Balance, type SplitMethod, type Transfer } from './types'
+import { DEFAULT_SPLIT_METHOD, type Balance, type SplitMethod } from './types'
+import type { Transfer } from './types'
 import type { Expense } from '@/domains/expenses/types'
 import type { Person } from '@/domains/people/types'
 import type { Vacation } from '@/domains/vacations/types'
@@ -32,7 +33,8 @@ function parseDay(value: string): number | null {
  * leaving the same day is one day of presence, not zero.
  *
  * The stay is clipped to the vacation window when there is one: days outside
- * it were never part of what is being shared.
+ * it were never part of what is being shared. Informational only — the split
+ * itself works date by date, not on this count.
  */
 export function daysPresent(person: Person, vacation?: Vacation | null): number {
   const arrival = parseDay(person.arrivalDate)
@@ -49,10 +51,43 @@ export function daysPresent(person: Person, vacation?: Vacation | null): number 
   return Math.round((to - from) / MS_PER_DAY) + 1
 }
 
-/** The weight each person carries in the split, under the chosen method. */
-function weightOf(person: Person, days: number, method: SplitMethod): number {
-  const shares = Math.max(0, person.shares)
-  return method === 'shareDays' ? shares * days : shares
+/** Was this person there on that day? Both ends of the stay count as present. */
+export function isPresentOn(person: Person, date: string): boolean {
+  const day = parseDay(date)
+  const arrival = parseDay(person.arrivalDate)
+  const departure = parseDay(person.departureDate)
+  if (day === null || arrival === null || departure === null) return false
+  return day >= arrival && day <= departure
+}
+
+/**
+ * Quote-part de chacun quand les dates comptent : **chaque dépense est
+ * répartie séparément**, entre les seules personnes présentes le jour où elle
+ * a été faite. Quelqu'un reparti la veille ne porte donc rien de la dépense du
+ * lendemain.
+ *
+ * C'est plus juste qu'un prorata global sur le nombre de jours : ce dernier
+ * étale toutes les dépenses uniformément sur les séjours, et fait donc payer
+ * un absent pour une dépense faite après son départ.
+ */
+function owedByPresence(
+  people: readonly Person[],
+  expenses: readonly Expense[],
+  shares: readonly number[],
+): number[] {
+  return expenses.reduce<number[]>((owed, expense) => {
+    const present = people.map((person, index) =>
+      isPresentOn(person, expense.date) ? shares[index]! : 0,
+    )
+
+    // Une dépense dont personne n'était témoin (date hors de tous les séjours,
+    // ou date illisible) doit quand même être payée : elle retombe sur le
+    // groupe entier, sinon le total réparti ne vaudrait plus le total dépensé.
+    const weights = present.some((weight) => weight > 0) ? present : shares
+
+    const parts = distribute(weights, expense.amountCents)
+    return owed.map((value, index) => value + (parts[index] ?? 0))
+  }, people.map(() => 0))
 }
 
 export interface BalanceOptions {
@@ -60,35 +95,22 @@ export interface BalanceOptions {
   vacation?: Vacation | null
 }
 
-/**
- * Ce que chacun doit, ce qu'il a avancé, et l'écart entre les deux.
- *
- * La méthode `shareDays` retombe sur les parts seules quand les dates ne
- * donnent aucun jour de présence à personne : mieux vaut répartir sur les
- * parts que de conclure que personne ne doit rien.
- */
+/** Ce que chacun doit, ce qu'il a avancé, et l'écart entre les deux. */
 export function computeBalances(
   people: readonly Person[],
   expenses: readonly Expense[],
   options: BalanceOptions = {},
 ): Balance[] {
-  const requested = options.method ?? DEFAULT_SPLIT_METHOD
+  const method = options.method ?? DEFAULT_SPLIT_METHOD
   const vacation = options.vacation ?? null
 
-  const days = people.map((person) =>
-    requested === 'shareDays' ? daysPresent(person, vacation) : 1,
-  )
-
-  let method = requested
-  let weights = people.map((person, index) => weightOf(person, days[index]!, method))
-
-  if (weights.every((weight) => weight <= 0) && requested === 'shareDays') {
-    method = 'shares'
-    weights = people.map((person) => weightOf(person, 1, method))
-  }
-
+  const shares = people.map((person) => Math.max(0, person.shares))
   const totalCents = expenses.reduce((total, expense) => total + expense.amountCents, 0)
-  const owed = distribute(weights, totalCents)
+
+  const owed =
+    method === 'presence'
+      ? owedByPresence(people, expenses, shares)
+      : distribute(shares, totalCents)
 
   const paidByPerson = new Map<string, number>()
   for (const expense of expenses) {
@@ -102,8 +124,7 @@ export function computeBalances(
       personId: person.id,
       name: person.name,
       shares: person.shares,
-      days: method === 'shareDays' ? days[index]! : 1,
-      weight: weights[index]!,
+      days: daysPresent(person, vacation),
       owedCents,
       paidCents,
       balanceCents: paidCents - owedCents,
