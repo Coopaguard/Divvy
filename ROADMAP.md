@@ -122,7 +122,8 @@ Afficher une vue synthétique des dépenses saisies.
 Calculer automatiquement qui doit combien à qui et afficher le tableau de règlement.
 
 ### Périmètre
-- Algorithme de répartition équitable (tenir compte des parts et dates)
+- Algorithme de répartition équitable **au prorata des parts** (voir
+  `specs/07-repartition.md` pour la règle retenue)
 - Calcul des transferts optimisés
 - Tableau « qui doit combien à qui »
 - Export des résultats
@@ -134,7 +135,7 @@ Calculer automatiquement qui doit combien à qui et afficher le tableau de règl
 - Tests unitaires pour la répartition
 
 ### Critères de validation
-- Calcul correct pour plusieurs scénarios (parts différentes, dates variables)
+- Calcul correct pour plusieurs scénarios (parts différentes, montants indivisibles)
 - Tableau de règlement lisible et cohérent
 - Transferts optimisés (minimum de transactions)
 - Export `.divvy` fonctionnel incluant les calculs
