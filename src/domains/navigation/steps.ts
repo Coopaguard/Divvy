@@ -21,6 +21,7 @@ export const STEPS: readonly Step[] = [
   { name: 'people', labelKey: 'steps.people', requiresVacation: true },
   { name: 'expenses', labelKey: 'steps.expenses', requiresVacation: true },
   { name: 'results', labelKey: 'steps.results', requiresVacation: true },
+  { name: 'settlement', labelKey: 'steps.settlement', requiresVacation: true },
 ]
 
 /** First step — where the app starts, and where a locked navigation falls back. */

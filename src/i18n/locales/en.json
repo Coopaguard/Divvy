@@ -104,11 +104,25 @@
     "people": "People",
     "expenses": "Expenses",
     "results": "Split",
-    "locked": "Pick a vacation first"
+    "locked": "Pick a vacation first",
+    "settlement": "Reimbursements"
   },
   "stepNav": {
     "label": "Step navigation",
     "previous": "Previous",
     "next": "Next"
+  },
+  "settlement": {
+    "title": "Reimbursements",
+    "empty": "Add people and expenses to work out the reimbursements",
+    "perDay": "Split pro rata by days of presence",
+    "perDayHint": "A share costs a price per day: everyone pays for their shares and the days they were there.",
+    "sharesTitle": "Each person’s share",
+    "transfersTitle": "Payments to make",
+    "days": "Days",
+    "owed": "Share",
+    "balance": "Balance",
+    "allSquare": "Everyone is square — nothing to reimburse.",
+    "transferCount": "1 payment settles everything | {count} payments settle everything"
   }
 }

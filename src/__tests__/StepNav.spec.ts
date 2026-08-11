@@ -43,7 +43,7 @@ describe('StepNav', () => {
 
   it('disables "next" on the last step', async () => {
     await selectVacation()
-    const { wrapper } = await mountNav('results')
+    const { wrapper } = await mountNav('settlement')
     expect(buttons(wrapper).next.attributes('disabled')).toBeDefined()
   })
 

@@ -33,13 +33,13 @@ describe('StepTimeline', () => {
   it('numbers the steps in order', async () => {
     const wrapper = await mountTimeline()
     const markers = wrapper.findAll('.step-marker').map((node) => node.text())
-    expect(markers).toEqual(['1', '2', '3', '4'])
+    expect(markers).toEqual(['1', '2', '3', '4', '5'])
   })
 
   it('greys out the later steps while no vacation is selected', async () => {
     const wrapper = await mountTimeline()
     const locked = wrapper.findAll('.timeline-step.locked')
-    expect(locked).toHaveLength(3)
+    expect(locked).toHaveLength(STEPS.length - 1)
     // Only the vacation choice is open at that point.
     expect(wrapper.findAll('.timeline-step')[0]!.classes()).not.toContain('locked')
   })
@@ -47,7 +47,7 @@ describe('StepTimeline', () => {
   it('renders no link for a locked step, so it cannot be clicked', async () => {
     const wrapper = await mountTimeline()
     expect(wrapper.findAll('a.step-link')).toHaveLength(1)
-    expect(wrapper.findAll('span.step-link')).toHaveLength(3)
+    expect(wrapper.findAll('span.step-link')).toHaveLength(STEPS.length - 1)
   })
 
   it('unlocks every step once a vacation is selected', async () => {
@@ -65,7 +65,7 @@ describe('StepTimeline', () => {
     useVacationStore().clearSelection()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.findAll('.timeline-step.locked')).toHaveLength(3)
+    expect(wrapper.findAll('.timeline-step.locked')).toHaveLength(STEPS.length - 1)
   })
 
   it('marks the current step', async () => {
@@ -86,6 +86,6 @@ describe('StepTimeline', () => {
     await selectVacation()
     const wrapper = await mountTimeline()
     const labels = wrapper.findAll('.step-label').map((node) => node.text())
-    expect(labels).toEqual(['Vacations', 'People', 'Expenses', 'Split'])
+    expect(labels).toEqual(['Vacations', 'People', 'Expenses', 'Split', 'Reimbursements'])
   })
 })
