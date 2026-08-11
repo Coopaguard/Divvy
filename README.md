@@ -35,7 +35,7 @@ Prise en charge **FR / EN** prévue dès le départ (déploiement progressif sel
 
 Déploiement automatique sur **GitHub Pages** (build à chaque push sur `main`).
 
-**Démo** : https://coopaguard.github.io/divvy/
+**Démo** : https://coopaguard.github.io/Divvy/
 
 ## 📚 Documentation
 

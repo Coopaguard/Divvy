@@ -42,7 +42,7 @@ Automatiser le déploiement sur GitHub Pages.
 
 ### Critères de validation
 - Push sur `main` → build automatique
-- Application accessible sur `https://coopaguard.github.io/divvy/`
+- Application accessible sur `https://coopaguard.github.io/Divvy/`
 - Nouvelle version visible après chaque merge
 
 ---
