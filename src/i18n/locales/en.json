@@ -1,0 +1,89 @@
+{
+  "app": {
+    "name": "Divvy",
+    "tagline": "Easily split vacation expenses"
+  },
+  "nav": {
+    "home": "Home",
+    "vacations": "Vacation",
+    "people": "People",
+    "expenses": "Expenses",
+    "results": "Results",
+    "export": "Export .divvy"
+  },
+  "home": {
+    "resume": "Resume",
+    "import": "Import a .divvy file",
+    "new": "New vacation"
+  },
+  "vacations": {
+    "title": "Vacation",
+    "fields": {
+      "name": "Title",
+      "startDate": "Start date",
+      "endDate": "End date"
+    },
+    "errors": {
+      "nameRequired": "Title is required",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "endBeforeStart": "End date must be after start date"
+    }
+  },
+  "people": {
+    "title": "People",
+    "add": "Add person",
+    "confirmDelete": "Delete this person?",
+    "fields": {
+      "name": "Name",
+      "shares": "Shares",
+      "arrivalDate": "Arrival date",
+      "departureDate": "Departure date"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "empty": "No people added yet",
+    "errors": {
+      "nameRequired": "Name is required",
+      "sharesMin": "Shares must be ≥ 1",
+      "arrivalRequired": "Arrival date is required",
+      "departureRequired": "Departure date is required",
+      "departureBeforeArrival": "Departure must be after arrival"
+    }
+  },
+  "expenses": {
+    "title": "Expenses",
+    "add": "Add expense",
+    "fields": {
+      "payer": "Payer",
+      "amount": "Amount",
+      "label": "Label",
+      "date": "Date"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "empty": "No expenses added yet"
+  },
+  "results": {
+    "title": "Results",
+    "chart": "Payers breakdown",
+    "settlement": "Who owes whom"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading…",
+    "error": {
+      "import": "Error importing file",
+      "invalidData": "Invalid data"
+    }
+  }
+}
