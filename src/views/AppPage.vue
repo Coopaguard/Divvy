@@ -1,29 +1,36 @@
 <script setup lang="ts">
-// AppPage — main one-page view (Phase 1: Vacances + Personnes)
+// AppPage — main one-page view (Vacances, Personnes, Dépenses)
 import { onMounted, watch } from 'vue'
 import { useVacationStore } from '@/stores/vacationStore'
 import { usePeopleStore } from '@/stores/peopleStore'
+import { useExpenseStore } from '@/stores/expenseStore'
 import AppShell from '@/ui/layouts/AppShell.vue'
 import HomeScreen from '@/ui/components/HomeScreen.vue'
 import VacationForm from '@/ui/components/VacationForm.vue'
 import PeopleList from '@/ui/components/PeopleList.vue'
+import ExpenseList from '@/ui/components/ExpenseList.vue'
 
 const vacationStore = useVacationStore()
 const peopleStore = usePeopleStore()
+const expenseStore = useExpenseStore()
 
 onMounted(() => vacationStore.loadFromStorage())
 
-// Single source of truth for the people list: it always mirrors the active
-// vacation. Deleting a vacation cascades in storage, so clearing the in-memory
-// list here keeps both sides consistent.
+// Single source of truth for the lists: they always mirror the active vacation.
+// Deleting a vacation cascades in storage, so clearing the in-memory lists here
+// keeps both sides consistent.
 watch(
   () => vacationStore.vacation?.id,
   async (vacationId) => {
-    if (vacationId) {
-      await peopleStore.loadByVacation(vacationId)
-    } else {
+    if (!vacationId) {
       peopleStore.clear()
+      expenseStore.clear()
+      return
     }
+    await Promise.all([
+      peopleStore.loadByVacation(vacationId),
+      expenseStore.loadByVacation(vacationId),
+    ])
   },
   { immediate: true },
 )
@@ -37,5 +44,6 @@ watch(
   <AppShell v-else>
     <VacationForm />
     <PeopleList />
+    <ExpenseList />
   </AppShell>
 </template>

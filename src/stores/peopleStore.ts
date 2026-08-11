@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import { peopleStorage } from '@/domains/storage/db'
 import { generateId, nowIso } from '@/domains/shared/entity'
 import { useAsyncState } from './asyncState'
+import { useExpenseStore } from './expenseStore'
 import type { Person, PersonDraft } from '@/domains/people/types'
 
 export const usePeopleStore = defineStore('people', () => {
@@ -47,12 +48,17 @@ export const usePeopleStore = defineStore('people', () => {
     return true
   }
 
-  /** Deletes a person. Returns false when the write failed. */
+  /**
+   * Deletes a person. Storage cascades to the expenses they paid, so the
+   * in-memory expense list is cleared alongside to stay consistent.
+   * Returns false when the write failed.
+   */
   async function deletePerson(id: string): Promise<boolean> {
     const result = await run(() => peopleStorage.delete(id))
     if (!result.ok) return false
 
     people.value = people.value.filter((person) => person.id !== id)
+    useExpenseStore().removeByPayer(id)
     return true
   }
 

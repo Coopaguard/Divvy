@@ -54,7 +54,8 @@
       "arrivalRequired": "Arrival date is required",
       "departureRequired": "Departure date is required",
       "departureBeforeArrival": "Departure must be after arrival"
-    }
+    },
+    "confirmDeleteWithExpenses": "Delete this person? The expense they paid will be deleted too. | Delete this person? The {count} expenses they paid will be deleted too."
   },
   "expenses": {
     "title": "Expenses",
@@ -69,7 +70,18 @@
       "edit": "Edit",
       "delete": "Delete"
     },
-    "empty": "No expenses added yet"
+    "empty": "No expenses added yet",
+    "total": "Total",
+    "confirmDelete": "Delete this expense?",
+    "noPeople": "Add at least one person before entering an expense",
+    "errors": {
+      "payerRequired": "A payer is required",
+      "amountRequired": "The amount is required",
+      "amountInvalid": "Invalid amount (2 decimals maximum)",
+      "amountPositive": "The amount must be greater than 0",
+      "labelRequired": "The label is required",
+      "dateRequired": "The date is required"
+    }
   },
   "results": {
     "title": "Results",

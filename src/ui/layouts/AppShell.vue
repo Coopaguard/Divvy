@@ -25,7 +25,8 @@ const activeSection = ref('section-vacations')
 const navItems = [
   { id: 'section-vacations', label: 'nav.vacations' },
   { id: 'section-people', label: 'nav.people' },
-  // phases 4-6 will add: expenses, results
+  { id: 'section-expenses', label: 'nav.expenses' },
+  // phase 5-6 will add: results
 ]
 
 function scrollTo(id: string): void {
