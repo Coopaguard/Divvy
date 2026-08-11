@@ -3,17 +3,8 @@
     "name": "Divvy",
     "tagline": "Easily split vacation expenses"
   },
-  "nav": {
-    "home": "Home",
-    "vacations": "Vacation",
-    "people": "People",
-    "expenses": "Expenses",
-    "results": "Results",
-    "export": "Export .divvy",
-    "menu": "Menu"
-  },
   "vacations": {
-    "title": "Vacation",
+    "title": "Vacations",
     "fields": {
       "name": "Title",
       "startDate": "Start date",
@@ -25,7 +16,6 @@
       "endDateRequired": "End date is required",
       "endBeforeStart": "End date must be after start date"
     },
-    "delete": "Delete vacation",
     "confirmDelete": "Delete this vacation? Everyone attached to it will be deleted too.",
     "new": "New vacation",
     "edit": "Edit vacation",
@@ -84,7 +74,7 @@
     }
   },
   "results": {
-    "title": "Results",
+    "title": "Split",
     "chart": "Payers breakdown",
     "settlement": "Who owes whom",
     "totalsByPerson": "Total paid per person",
@@ -110,8 +100,8 @@
   "steps": {
     "label": "Steps",
     "vacations": "Vacations",
-    "people": "Participants",
-    "expenses": "Payments",
+    "people": "People",
+    "expenses": "Expenses",
     "results": "Split",
     "locked": "Pick a vacation first"
   },

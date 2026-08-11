@@ -3,15 +3,6 @@
     "name": "Divvy",
     "tagline": "Partagez simplement vos dépenses de vacances"
   },
-  "nav": {
-    "home": "Accueil",
-    "vacations": "Vacances",
-    "people": "Personnes",
-    "expenses": "Dépenses",
-    "results": "Résultats",
-    "export": "Exporter .divvy",
-    "menu": "Menu"
-  },
   "vacations": {
     "title": "Vacances",
     "fields": {
@@ -25,7 +16,6 @@
       "endDateRequired": "La date de fin est requise",
       "endBeforeStart": "La date de fin doit être après la date de début"
     },
-    "delete": "Supprimer les vacances",
     "confirmDelete": "Supprimer ces vacances ? Les personnes rattachées seront également supprimées.",
     "new": "Nouvelle vacance",
     "edit": "Modifier la vacance",
@@ -84,7 +74,7 @@
     }
   },
   "results": {
-    "title": "Résultats",
+    "title": "Répartition",
     "chart": "Répartition des payeurs",
     "settlement": "Qui doit combien à qui",
     "totalsByPerson": "Total payé par personne",
@@ -110,8 +100,8 @@
   "steps": {
     "label": "Étapes",
     "vacations": "Vacances",
-    "people": "Représentants",
-    "expenses": "Versements",
+    "people": "Personnes",
+    "expenses": "Dépenses",
     "results": "Répartition",
     "locked": "Choisissez d’abord une vacance"
   },

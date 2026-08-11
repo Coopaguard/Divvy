@@ -7,6 +7,8 @@ import {
   neighbours,
   stepIndex,
 } from '@/domains/navigation/steps'
+import fr from '@/i18n/locales/fr.json'
+import en from '@/i18n/locales/en.json'
 
 describe('steps', () => {
   it('starts on the vacation choice', () => {
@@ -57,5 +59,25 @@ describe('steps', () => {
       expect(isStepReachable(step, false)).toBe(!step.requiresVacation)
       expect(isStepReachable(step, true)).toBe(true)
     }
+  })
+
+  // One vocabulary, not two: a step is named exactly like the section it opens.
+  // Renaming one side without the other is what this guards against.
+  //
+  // The locale files are read through a loose shape on purpose: the assertion
+  // is about two keys matching, not about the catalogue's structure.
+  type Messages = Record<string, Record<string, unknown>>
+
+  describe.each<[string, Messages]>([
+    ['fr', fr],
+    ['en', en],
+  ])('%s labels', (_locale, messages) => {
+    it.each(STEPS.map((step) => step.name))('names the %s step after its section', (name) => {
+      const stepLabel = messages.steps?.[name]
+      const sectionTitle = messages[name]?.title
+
+      expect(stepLabel).toBeTruthy()
+      expect(stepLabel).toBe(sectionTitle)
+    })
   })
 })

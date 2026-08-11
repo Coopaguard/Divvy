@@ -72,7 +72,7 @@ describe('StepTimeline', () => {
     await selectVacation()
     const wrapper = await mountTimeline('expenses')
     const current = wrapper.find('.timeline-step.current')
-    expect(current.text()).toContain('Payments')
+    expect(current.text()).toContain('Expenses')
     expect(current.find('[aria-current="step"]').exists()).toBe(true)
   })
 
@@ -82,10 +82,10 @@ describe('StepTimeline', () => {
     expect(wrapper.findAll('.timeline-step.done')).toHaveLength(2)
   })
 
-  it('uses the requested vocabulary for the step labels', async () => {
+  it('labels the steps with the section vocabulary', async () => {
     await selectVacation()
     const wrapper = await mountTimeline()
     const labels = wrapper.findAll('.step-label').map((node) => node.text())
-    expect(labels).toEqual(['Vacations', 'Participants', 'Payments', 'Split'])
+    expect(labels).toEqual(['Vacations', 'People', 'Expenses', 'Split'])
   })
 })
