@@ -86,7 +86,10 @@
   "results": {
     "title": "Results",
     "chart": "Payers breakdown",
-    "settlement": "Who owes whom"
+    "settlement": "Who owes whom",
+    "totalsByPerson": "Total paid per person",
+    "paid": "Total paid",
+    "empty": "No expense entered yet"
   },
   "common": {
     "save": "Save",

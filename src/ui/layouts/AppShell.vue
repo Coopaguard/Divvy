@@ -26,7 +26,7 @@ const navItems = [
   { id: 'section-vacations', label: 'nav.vacations' },
   { id: 'section-people', label: 'nav.people' },
   { id: 'section-expenses', label: 'nav.expenses' },
-  // phase 5-6 will add: results
+  { id: 'section-results', label: 'nav.results' },
 ]
 
 function scrollTo(id: string): void {

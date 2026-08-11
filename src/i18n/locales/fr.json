@@ -86,7 +86,10 @@
   "results": {
     "title": "Résultats",
     "chart": "Répartition des payeurs",
-    "settlement": "Qui doit combien à qui"
+    "settlement": "Qui doit combien à qui",
+    "totalsByPerson": "Total payé par personne",
+    "paid": "Total payé",
+    "empty": "Aucune dépense saisie pour le moment"
   },
   "common": {
     "save": "Enregistrer",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// AppPage — main one-page view (Vacances, Personnes, Dépenses)
+// AppPage — main one-page view (Vacances, Personnes, Dépenses, Résultats)
 import { onMounted, watch } from 'vue'
 import { useVacationStore } from '@/stores/vacationStore'
 import { usePeopleStore } from '@/stores/peopleStore'
@@ -9,6 +9,7 @@ import HomeScreen from '@/ui/components/HomeScreen.vue'
 import VacationForm from '@/ui/components/VacationForm.vue'
 import PeopleList from '@/ui/components/PeopleList.vue'
 import ExpenseList from '@/ui/components/ExpenseList.vue'
+import ExpensesSummary from '@/ui/components/ExpensesSummary.vue'
 
 const vacationStore = useVacationStore()
 const peopleStore = usePeopleStore()
@@ -45,5 +46,6 @@ watch(
     <VacationForm />
     <PeopleList />
     <ExpenseList />
+    <ExpensesSummary />
   </AppShell>
 </template>
