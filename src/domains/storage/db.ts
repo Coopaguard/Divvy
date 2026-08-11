@@ -1,5 +1,14 @@
 // IndexedDB storage — Divvy
-// Stores: vacations, people (expenses and settlement added in later phases)
+//
+// Modèle de propriété : le store `vacations` est la racine. Tout autre store
+// (Personnes aujourd'hui, Dépenses et répartition plus tard) contient des
+// enregistrements rattachés à exactement une vacance via leur champ
+// `vacationId`. Supprimer une vacance supprime donc en cascade tout ce qui lui
+// est rattaché, dans une seule transaction : soit tout part, soit rien ne part.
+//
+// Pour brancher un nouveau domaine sur la cascade, il suffit de l'ajouter à
+// VACATION_OWNED_STORES — le schéma, la cascade et le nettoyage des orphelins
+// s'appliquent automatiquement.
 
 import type { Vacation } from '@/domains/vacations/types'
 import type { Person } from '@/domains/people/types'
@@ -7,101 +16,285 @@ import type { Person } from '@/domains/people/types'
 const DB_NAME = 'divvy'
 const DB_VERSION = 1
 
-export type DivvyStore = 'vacations' | 'people'
+/** Root store — owns every other record. */
+export const ROOT_STORE = 'vacations' as const
+
+/** Name of the field (and index) linking an owned record to its vacation. */
+export const VACATION_ID_KEY = 'vacationId' as const
+
+/** Stores whose records belong to a vacation and cascade on delete. */
+export const VACATION_OWNED_STORES = ['people'] as const
+
+export type VacationOwnedStore = (typeof VACATION_OWNED_STORES)[number]
+export type DivvyStore = typeof ROOT_STORE | VacationOwnedStore
+
+/** Record attached to a vacation — the shape the cascade relies on. */
+interface OwnedRecord {
+  id: string
+  [VACATION_ID_KEY]: string
+}
+
+/** How many records were removed from each owned store. */
+export type CascadeReport = Record<VacationOwnedStore, number>
+
+function emptyReport(): CascadeReport {
+  return Object.fromEntries(VACATION_OWNED_STORES.map((name) => [name, 0])) as CascadeReport
+}
+
+/** Total number of records removed, all stores combined. */
+export function totalDeleted(report: CascadeReport): number {
+  return Object.values(report).reduce((sum, count) => sum + count, 0)
+}
+
+// --- Connection -------------------------------------------------------------
+
+// A single connection is shared by every operation: reopening the database on
+// each read/write leaked one IDBDatabase handle per call.
+let connection: Promise<IDBDatabase> | null = null
+
+function createSchema(db: IDBDatabase): void {
+  if (!db.objectStoreNames.contains(ROOT_STORE)) {
+    db.createObjectStore(ROOT_STORE, { keyPath: 'id' })
+  }
+  for (const storeName of VACATION_OWNED_STORES) {
+    if (!db.objectStoreNames.contains(storeName)) {
+      const store = db.createObjectStore(storeName, { keyPath: 'id' })
+      store.createIndex(VACATION_ID_KEY, VACATION_ID_KEY, { unique: false })
+    }
+  }
+}
 
 function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  if (connection) return connection
+
+  connection = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result
-      if (!db.objectStoreNames.contains('vacations')) {
-        db.createObjectStore('vacations', { keyPath: 'id' })
+    request.onupgradeneeded = () => createSchema(request.result)
+
+    request.onsuccess = () => {
+      const db = request.result
+      // Forget the handle when the browser or another tab closes it, so the
+      // next call reopens instead of reusing a dead connection.
+      db.onclose = () => releaseConnection()
+      db.onversionchange = () => {
+        db.close()
+        releaseConnection()
       }
-      if (!db.objectStoreNames.contains('people')) {
-        const peopleStore = db.createObjectStore('people', { keyPath: 'id' })
-        peopleStore.createIndex('vacationId', 'vacationId', { unique: false })
-      }
+      resolve(db)
     }
 
+    request.onerror = () => {
+      releaseConnection()
+      reject(request.error)
+    }
+  })
+
+  return connection
+}
+
+function releaseConnection(): void {
+  connection = null
+}
+
+/** Closes the shared connection — used by tests and before a schema upgrade. */
+export async function closeDB(): Promise<void> {
+  const pending = connection
+  releaseConnection()
+  if (!pending) return
+  try {
+    ;(await pending).close()
+  } catch {
+    // Already closed or failed to open — nothing left to release.
+  }
+}
+
+// --- Request / transaction helpers ------------------------------------------
+
+function toPromise<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
   })
 }
 
-async function getAll<T>(storeName: DivvyStore): Promise<T[]> {
-  const db = await openDB()
+/** Resolves once the transaction has committed, rejects if it aborts. */
+function committed(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly')
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error)
+    tx.onabort = () => reject(tx.error ?? new Error('IndexedDB transaction aborted'))
+  })
+}
+
+async function transaction<T>(
+  storeNames: DivvyStore | DivvyStore[],
+  mode: IDBTransactionMode,
+  run: (tx: IDBTransaction) => Promise<T>,
+): Promise<T> {
+  const db = await openDB()
+  const tx = db.transaction(storeNames, mode)
+  const done = committed(tx)
+  try {
+    const result = await run(tx)
+    await done
+    return result
+  } catch (cause) {
+    // Leave storage untouched when any step of the transaction failed.
+    if (mode === 'readwrite') abortQuietly(tx)
+    // The abort surfaces on `done` too; it is already reported through `cause`.
+    done.catch(() => undefined)
+    throw cause
+  }
+}
+
+function abortQuietly(tx: IDBTransaction): void {
+  try {
+    tx.abort()
+  } catch {
+    // Already committed or aborted — nothing to undo.
+  }
+}
+
+// --- Generic CRUD -----------------------------------------------------------
+
+function getAll<T>(storeName: DivvyStore): Promise<T[]> {
+  return transaction(storeName, 'readonly', (tx) =>
+    toPromise(tx.objectStore(storeName).getAll() as IDBRequest<T[]>),
+  )
+}
+
+function getById<T>(storeName: DivvyStore, id: string): Promise<T | undefined> {
+  return transaction(storeName, 'readonly', (tx) =>
+    toPromise(tx.objectStore(storeName).get(id) as IDBRequest<T | undefined>),
+  )
+}
+
+function put<T>(storeName: DivvyStore, record: T): Promise<void> {
+  return transaction(storeName, 'readwrite', async (tx) => {
+    await toPromise(tx.objectStore(storeName).put(record))
+  })
+}
+
+function remove(storeName: DivvyStore, id: string): Promise<void> {
+  return transaction(storeName, 'readwrite', async (tx) => {
+    await toPromise(tx.objectStore(storeName).delete(id))
+  })
+}
+
+function getAllByVacation<T>(storeName: VacationOwnedStore, vacationId: string): Promise<T[]> {
+  return transaction(storeName, 'readonly', (tx) =>
+    toPromise(
+      tx.objectStore(storeName).index(VACATION_ID_KEY).getAll(vacationId) as IDBRequest<T[]>,
+    ),
+  )
+}
+
+// --- Cascade ----------------------------------------------------------------
+
+/**
+ * Deletes every record of `storeName` attached to `vacationId`.
+ * Runs inside the caller's transaction so the whole cascade is atomic.
+ */
+function deleteAttachedRecords(
+  tx: IDBTransaction,
+  storeName: VacationOwnedStore,
+  vacationId: string,
+): Promise<number> {
+  return new Promise((resolve, reject) => {
     const store = tx.objectStore(storeName)
-    const request = store.getAll()
-    request.onsuccess = () => resolve(request.result as T[])
+    const request = store.index(VACATION_ID_KEY).openKeyCursor(IDBKeyRange.only(vacationId))
+    let deleted = 0
+
+    request.onsuccess = () => {
+      const cursor = request.result
+      if (!cursor) {
+        resolve(deleted)
+        return
+      }
+      store.delete(cursor.primaryKey)
+      deleted += 1
+      cursor.continue()
+    }
     request.onerror = () => reject(request.error)
   })
 }
 
-async function getById<T>(storeName: DivvyStore, id: string): Promise<T | undefined> {
-  const db = await openDB()
+/** Deletes records whose vacation no longer exists. */
+function deleteOrphanRecords(
+  tx: IDBTransaction,
+  storeName: VacationOwnedStore,
+  knownVacationIds: ReadonlySet<IDBValidKey>,
+): Promise<number> {
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly')
-    const store = tx.objectStore(storeName)
-    const request = store.get(id)
-    request.onsuccess = () => resolve(request.result as T | undefined)
+    const request = tx.objectStore(storeName).openCursor()
+    let deleted = 0
+
+    request.onsuccess = () => {
+      const cursor = request.result
+      if (!cursor) {
+        resolve(deleted)
+        return
+      }
+      const record = cursor.value as Partial<OwnedRecord>
+      const owner = record[VACATION_ID_KEY]
+      if (!owner || !knownVacationIds.has(owner)) {
+        cursor.delete()
+        deleted += 1
+      }
+      cursor.continue()
+    }
     request.onerror = () => reject(request.error)
   })
 }
 
-async function put<T>(storeName: DivvyStore, record: T): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite')
-    const store = tx.objectStore(storeName)
-    const request = store.put(record)
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
+/**
+ * Supprime une vacance **et tout ce qui lui est rattaché**, en une seule
+ * transaction couvrant tous les stores : aucun enregistrement orphelin ne peut
+ * subsister, et un échec en cours de route laisse le stockage inchangé.
+ */
+export async function deleteVacationCascade(vacationId: string): Promise<CascadeReport> {
+  return transaction([ROOT_STORE, ...VACATION_OWNED_STORES], 'readwrite', async (tx) => {
+    tx.objectStore(ROOT_STORE).delete(vacationId)
+
+    const report = emptyReport()
+    for (const storeName of VACATION_OWNED_STORES) {
+      report[storeName] = await deleteAttachedRecords(tx, storeName, vacationId)
+    }
+    return report
   })
 }
 
-async function remove(storeName: DivvyStore, id: string): Promise<void> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite')
-    const store = tx.objectStore(storeName)
-    const request = store.delete(id)
-    request.onsuccess = () => resolve()
-    request.onerror = () => reject(request.error)
+/**
+ * Nettoie le stockage des enregistrements orphelins — ceux dont la vacance
+ * n'existe plus. La cascade empêche d'en créer de nouveaux ; ce nettoyage
+ * rattrape les données écrites avant sa mise en place.
+ */
+export async function pruneOrphanRecords(): Promise<CascadeReport> {
+  return transaction([ROOT_STORE, ...VACATION_OWNED_STORES], 'readwrite', async (tx) => {
+    const vacationIds = new Set(await toPromise(tx.objectStore(ROOT_STORE).getAllKeys()))
+
+    const report = emptyReport()
+    for (const storeName of VACATION_OWNED_STORES) {
+      report[storeName] = await deleteOrphanRecords(tx, storeName, vacationIds)
+    }
+    return report
   })
 }
 
-async function getAllByIndex<T>(
-  storeName: DivvyStore,
-  indexName: string,
-  value: IDBValidKey,
-): Promise<T[]> {
-  const db = await openDB()
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly')
-    const store = tx.objectStore(storeName)
-    const index = store.index(indexName)
-    const request = index.getAll(value)
-    request.onsuccess = () => resolve(request.result as T[])
-    request.onerror = () => reject(request.error)
-  })
-}
+// --- Public API per domain --------------------------------------------------
 
-// Vacation helpers
 export const vacationStorage = {
-  getAll: () => getAll<Vacation>('vacations'),
-  getById: (id: string) => getById<Vacation>('vacations', id),
-  save: (vacation: Vacation) => put<Vacation>('vacations', vacation),
-  delete: (id: string) => remove('vacations', id),
+  getAll: () => getAll<Vacation>(ROOT_STORE),
+  getById: (id: string) => getById<Vacation>(ROOT_STORE, id),
+  save: (vacation: Vacation) => put(ROOT_STORE, vacation),
+  /** Deletes the vacation and cascades to every attached record. */
+  delete: (id: string) => deleteVacationCascade(id),
 }
 
-// People helpers
 export const peopleStorage = {
   getAll: () => getAll<Person>('people'),
-  getByVacationId: (vacationId: string) =>
-    getAllByIndex<Person>('people', 'vacationId', vacationId),
-  save: (person: Person) => put<Person>('people', person),
+  getByVacationId: (vacationId: string) => getAllByVacation<Person>('people', vacationId),
+  save: (person: Person) => put('people', person),
   delete: (id: string) => remove('people', id),
 }

@@ -11,29 +11,27 @@ import PeopleList from '@/ui/components/PeopleList.vue'
 const vacationStore = useVacationStore()
 const peopleStore = usePeopleStore()
 
-onMounted(async () => {
-  await vacationStore.loadFromStorage()
-  if (vacationStore.vacation) {
-    await peopleStore.loadByVacation(vacationStore.vacation.id)
-  }
-})
+onMounted(() => vacationStore.loadFromStorage())
 
-// When a vacation becomes available, load its people
+// Single source of truth for the people list: it always mirrors the active
+// vacation. Deleting a vacation cascades in storage, so clearing the in-memory
+// list here keeps both sides consistent.
 watch(
   () => vacationStore.vacation?.id,
-  async (id) => {
-    if (id) {
-      await peopleStore.loadByVacation(id)
+  async (vacationId) => {
+    if (vacationId) {
+      await peopleStore.loadByVacation(vacationId)
     } else {
       peopleStore.clear()
     }
   },
+  { immediate: true },
 )
 </script>
 
 <template>
   <!-- Landing screen when no vacation is loaded -->
-  <HomeScreen v-if="!vacationStore.vacation" />
+  <HomeScreen v-if="!vacationStore.hasVacation" />
 
   <!-- Main one-page app once a vacation is active -->
   <AppShell v-else>
