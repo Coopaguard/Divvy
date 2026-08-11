@@ -63,6 +63,9 @@ const steps = computed(() =>
 .timeline {
   width: 100%;
   overflow-x: auto;
+  /* Flex items refuse to shrink below their content unless told to. Without
+     this the timeline widens the whole page instead of scrolling itself. */
+  min-width: 0;
 }
 
 .timeline-steps {
@@ -74,7 +77,8 @@ const steps = computed(() =>
 
 .timeline-step {
   flex: 1 1 0;
-  min-width: 5.5rem;
+  /* Narrow enough that five steps still fit a small phone without scrolling. */
+  min-width: 4rem;
   position: relative;
   display: flex;
   justify-content: center;
@@ -130,6 +134,8 @@ const steps = computed(() =>
 
 .step-label {
   line-height: 1.2;
+  /* A long single-word label wraps rather than widening its step. */
+  overflow-wrap: anywhere;
 }
 
 /* Reachable but not visited yet */
@@ -178,6 +184,10 @@ const steps = computed(() =>
 }
 
 @media (min-width: 768px) {
+  .timeline-step {
+    min-width: 5.5rem;
+  }
+
   .step-link {
     font-size: var(--font-size-sm);
   }

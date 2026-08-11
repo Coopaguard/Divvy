@@ -28,6 +28,7 @@ describe('steps', () => {
       'people',
       'expenses',
       'results',
+      'settlement',
     ])
   })
 
@@ -47,7 +48,7 @@ describe('steps', () => {
   })
 
   it('neighbours has no next on the last step', () => {
-    expect(neighbours('results').next).toBeNull()
+    expect(neighbours('settlement').next).toBeNull()
   })
 
   it('neighbours of an unknown step are empty', () => {

@@ -10,6 +10,7 @@ import { computed, ref } from 'vue'
 import { pruneOrphanRecords, vacationStorage } from '@/domains/storage/db'
 import { generateId, nowIso } from '@/domains/shared/entity'
 import { useAsyncState } from './asyncState'
+import { DEFAULT_SPLIT_METHOD, type SplitMethod } from '@/domains/settlement/types'
 import type { Vacation, VacationDraft } from '@/domains/vacations/types'
 
 export const useVacationStore = defineStore('vacations', () => {
@@ -23,6 +24,11 @@ export const useVacationStore = defineStore('vacations', () => {
   )
 
   const hasVacation = computed(() => vacation.value !== null)
+
+  /** Split method of the selected vacation, defaulted for older records. */
+  const splitMethod = computed<SplitMethod>(
+    () => vacation.value?.splitMethod ?? DEFAULT_SPLIT_METHOD,
+  )
 
   /** Most recently updated first — the one the user is most likely to resume. */
   const sortedVacations = computed<Vacation[]>(() =>
@@ -92,6 +98,21 @@ export const useVacationStore = defineStore('vacations', () => {
     return true
   }
 
+  /** Changes how the selected vacation is split. False when the write failed. */
+  async function setSplitMethod(method: SplitMethod): Promise<boolean> {
+    const current = vacation.value
+    if (!current) return false
+    if ((current.splitMethod ?? DEFAULT_SPLIT_METHOD) === method) return true
+
+    const updated: Vacation = { ...current, splitMethod: method, updatedAt: nowIso() }
+    const result = await run(() => vacationStorage.save(updated))
+    if (!result.ok) return false
+
+    const index = vacations.value.findIndex((item) => item.id === updated.id)
+    if (index !== -1) vacations.value[index] = updated
+    return true
+  }
+
   /**
    * Supprime une vacance **et tout ce qui lui est rattaché** (Personnes, puis
    * Dépenses et répartition). Sans argument, supprime la vacance sélectionnée.
@@ -119,6 +140,8 @@ export const useVacationStore = defineStore('vacations', () => {
     loading,
     error,
     hasVacation,
+    splitMethod,
+    setSplitMethod,
     loadFromStorage,
     select,
     clearSelection,
