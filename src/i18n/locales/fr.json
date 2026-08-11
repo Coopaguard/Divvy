@@ -12,11 +12,6 @@
     "export": "Exporter .divvy",
     "menu": "Menu"
   },
-  "home": {
-    "resume": "Reprendre",
-    "import": "Importer un fichier .divvy",
-    "new": "Nouvelles vacances"
-  },
   "vacations": {
     "title": "Vacances",
     "fields": {
@@ -31,7 +26,12 @@
       "endBeforeStart": "La date de fin doit être après la date de début"
     },
     "delete": "Supprimer les vacances",
-    "confirmDelete": "Supprimer ces vacances ? Les personnes rattachées seront également supprimées."
+    "confirmDelete": "Supprimer ces vacances ? Les personnes rattachées seront également supprimées.",
+    "new": "Nouvelle vacance",
+    "edit": "Modifier la vacance",
+    "select": "Choisir",
+    "selected": "Sélectionnée",
+    "empty": "Aucune vacance enregistrée"
   },
   "people": {
     "title": "Personnes",
@@ -106,5 +106,18 @@
       "saveFailed": "Impossible d'enregistrer les modifications",
       "deleteFailed": "Impossible de supprimer"
     }
+  },
+  "steps": {
+    "label": "Étapes",
+    "vacations": "Vacances",
+    "people": "Représentants",
+    "expenses": "Versements",
+    "results": "Répartition",
+    "locked": "Choisissez d’abord une vacance"
+  },
+  "stepNav": {
+    "label": "Navigation entre les étapes",
+    "previous": "Précédent",
+    "next": "Suivant"
   }
 }

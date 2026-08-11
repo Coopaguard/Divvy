@@ -1,12 +1,22 @@
 <script setup lang="ts">
-// AppShell — main layout: side nav (desktop), burger menu (mobile)
-import { ref, onMounted, onUnmounted } from 'vue'
+// AppShell — coque commune : en-tête, timeline des étapes, contenu, navigation
+//
+// La timeline remplace l'ancienne navigation par ancres : chaque étape est
+// maintenant une route à part entière, et le contenu de l'étape courante arrive
+// par le slot (`<RouterView>` côté App).
+import { watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
+import { usePeopleStore } from '@/stores/peopleStore'
+import { useExpenseStore } from '@/stores/expenseStore'
 import { applyDocumentLocale, persistLocale, type SupportedLocale } from '@/i18n'
+import StepTimeline from '@/ui/components/StepTimeline.vue'
+import StepNav from '@/ui/components/StepNav.vue'
 
 const { t, locale } = useI18n()
 const vacationStore = useVacationStore()
+const peopleStore = usePeopleStore()
+const expenseStore = useExpenseStore()
 
 const languages: { code: SupportedLocale; flag: string; label: string }[] = [
   { code: 'fr', flag: '🇫🇷', label: 'Français' },
@@ -19,298 +29,117 @@ function setLocale(code: SupportedLocale): void {
   applyDocumentLocale(code)
 }
 
-const menuOpen = ref(false)
-const activeSection = ref('section-vacations')
+void vacationStore.loadFromStorage()
 
-const navItems = [
-  { id: 'section-vacations', label: 'nav.vacations' },
-  { id: 'section-people', label: 'nav.people' },
-  { id: 'section-expenses', label: 'nav.expenses' },
-  { id: 'section-results', label: 'nav.results' },
-]
-
-function scrollTo(id: string): void {
-  menuOpen.value = false
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
-  activeSection.value = id
-}
-
-function onScroll(): void {
-  for (const item of navItems) {
-    const el = document.getElementById(item.id)
-    if (!el) continue
-    const rect = el.getBoundingClientRect()
-    if (rect.top <= 120) activeSection.value = item.id
-  }
-}
-
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+// Single source of truth for the lists: they always mirror the selected
+// vacation. Selecting another one — or none — swaps them in one place, so no
+// step can ever display data belonging to a different vacation.
+watch(
+  () => vacationStore.selectedId,
+  async (vacationId) => {
+    if (!vacationId) {
+      peopleStore.clear()
+      expenseStore.clear()
+      return
+    }
+    await Promise.all([
+      peopleStore.loadByVacation(vacationId),
+      expenseStore.loadByVacation(vacationId),
+    ])
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div class="app-shell">
-    <!-- Desktop: floating left nav -->
-    <nav class="side-nav" aria-label="Navigation">
-      <div class="side-nav-logo">{{ t('app.name') }}</div>
-      <ul class="side-nav-links">
-        <li v-for="item in navItems" :key="item.id">
+    <header class="app-header">
+      <div class="header-top">
+        <span class="app-logo">{{ t('app.name') }}</span>
+        <div class="lang-selector">
           <button
-            :class="['nav-link', { active: activeSection === item.id }]"
-            @click="scrollTo(item.id)"
+            v-for="lang in languages"
+            :key="lang.code"
+            :class="['lang-btn', { active: locale === lang.code }]"
+            :title="lang.label"
+            :aria-label="lang.label"
+            :aria-pressed="locale === lang.code"
+            @click="setLocale(lang.code)"
           >
-            {{ t(item.label) }}
+            {{ lang.flag }}
           </button>
-        </li>
-      </ul>
-      <div class="lang-selector">
-        <button
-          v-for="lang in languages"
-          :key="lang.code"
-          :class="['lang-btn', { active: locale === lang.code }]"
-          :title="lang.label"
-          :aria-label="lang.label"
-          :aria-pressed="locale === lang.code"
-          @click="setLocale(lang.code)"
-        >
-          {{ lang.flag }}
-        </button>
+        </div>
       </div>
-    </nav>
-
-    <!-- Mobile: header + burger -->
-    <header class="mobile-header">
-      <span class="mobile-logo">{{ t('app.name') }}</span>
-      <button
-        class="burger-btn"
-        :aria-expanded="menuOpen"
-        :aria-label="t('nav.menu')"
-        @click="menuOpen = !menuOpen"
-      >
-        <span class="burger-icon" :class="{ open: menuOpen }">
-          <span /><span /><span />
-        </span>
-      </button>
+      <StepTimeline />
     </header>
 
-    <!-- Mobile: full-screen menu -->
-    <div v-if="menuOpen" class="fullscreen-menu" @click.self="menuOpen = false">
-      <ul class="fullscreen-links">
-        <li v-for="item in navItems" :key="item.id">
-          <button class="fullscreen-link" @click="scrollTo(item.id)">
-            {{ t(item.label) }}
-          </button>
-        </li>
-      </ul>
-      <div class="lang-selector fullscreen-lang">
-        <button
-          v-for="lang in languages"
-          :key="lang.code"
-          :class="['lang-btn', { active: locale === lang.code }]"
-          :title="lang.label"
-          :aria-label="lang.label"
-          :aria-pressed="locale === lang.code"
-          @click="setLocale(lang.code)"
-        >
-          {{ lang.flag }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Main content -->
     <main class="main-content">
-      <div class="vacation-title">
-        {{ vacationStore.vacation?.name ?? t('app.name') }}
-      </div>
+      <h1 class="vacation-title">
+        {{ vacationStore.vacation?.name ?? t('app.tagline') }}
+      </h1>
       <slot />
+      <StepNav />
     </main>
   </div>
 </template>
 
 <style scoped>
-/* Layout */
 .app-shell {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   background: var(--bg-page);
 }
 
-/* Side nav (desktop) */
-.side-nav {
-  display: none;
-  position: fixed;
+/* Header + timeline stay in view while the step content scrolls. */
+.app-header {
+  position: sticky;
   top: 0;
-  left: 0;
-  width: 200px;
-  height: 100vh;
-  border-right: 1px solid var(--border);
-  padding: var(--space-xl) var(--space-md);
+  z-index: 20;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  z-index: 10;
+  gap: var(--space-md);
 }
 
-.side-nav-logo {
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.app-logo {
   font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--primary);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--border);
 }
 
-.side-nav-links {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.nav-link {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: var(--space-xs) var(--space-sm);
-  border: none;
-  background: none;
-  color: var(--text);
-  font-size: var(--font-size-sm);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.nav-link:hover {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-.nav-link.active {
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-weight: 600;
-}
-
-/* Main content */
 .main-content {
   flex: 1;
-  padding: var(--space-lg);
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  max-width: 800px;
-  width: 100%;
 }
 
 .vacation-title {
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--text);
-  padding-top: var(--space-sm);
 }
 
-/* Mobile header */
-.mobile-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-md);
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-page);
-  z-index: 20;
-}
-
-.mobile-logo {
-  font-size: var(--font-size-base);
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.burger-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: var(--space-xs);
-  display: flex;
-  align-items: center;
-}
-
-.burger-icon {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 22px;
-}
-
-.burger-icon span {
-  display: block;
-  height: 2px;
-  width: 100%;
-  background: var(--text);
-  border-radius: 2px;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.burger-icon.open span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-
-.burger-icon.open span:nth-child(2) {
-  opacity: 0;
-}
-
-.burger-icon.open span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-/* Full-screen mobile menu */
-.fullscreen-menu {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-page);
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.fullscreen-links {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.fullscreen-link {
-  background: none;
-  border: none;
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius);
-  transition: color 0.15s ease;
-}
-
-.fullscreen-link:hover {
-  color: var(--primary);
-}
-
-/* Language selector */
 .lang-selector {
   display: flex;
   gap: var(--space-xs);
-  margin-top: auto;
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--border);
 }
 
 .lang-btn {
@@ -334,34 +163,13 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   opacity: 1;
 }
 
-.fullscreen-lang {
-  margin-top: var(--space-lg);
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-md);
-  justify-content: center;
-  font-size: 2rem;
-}
-
-/* Desktop breakpoint */
 @media (min-width: 768px) {
-  .side-nav {
-    display: flex;
-  }
-
-  .mobile-header {
-    display: none;
+  .app-header {
+    padding: var(--space-md) var(--space-xl);
   }
 
   .main-content {
-    margin-left: 200px;
-    padding: var(--space-xl) var(--space-xl);
-  }
-}
-
-@media (max-width: 767px) {
-  .main-content {
-    margin-top: 48px;
-    padding: var(--space-md);
+    padding: var(--space-xl);
   }
 }
 </style>

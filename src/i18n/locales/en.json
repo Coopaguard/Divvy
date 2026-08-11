@@ -12,11 +12,6 @@
     "export": "Export .divvy",
     "menu": "Menu"
   },
-  "home": {
-    "resume": "Resume",
-    "import": "Import a .divvy file",
-    "new": "New vacation"
-  },
   "vacations": {
     "title": "Vacation",
     "fields": {
@@ -31,7 +26,12 @@
       "endBeforeStart": "End date must be after start date"
     },
     "delete": "Delete vacation",
-    "confirmDelete": "Delete this vacation? Everyone attached to it will be deleted too."
+    "confirmDelete": "Delete this vacation? Everyone attached to it will be deleted too.",
+    "new": "New vacation",
+    "edit": "Edit vacation",
+    "select": "Select",
+    "selected": "Selected",
+    "empty": "No vacation saved yet"
   },
   "people": {
     "title": "People",
@@ -106,5 +106,18 @@
       "saveFailed": "Could not save the changes",
       "deleteFailed": "Could not delete"
     }
+  },
+  "steps": {
+    "label": "Steps",
+    "vacations": "Vacations",
+    "people": "Participants",
+    "expenses": "Payments",
+    "results": "Split",
+    "locked": "Pick a vacation first"
+  },
+  "stepNav": {
+    "label": "Step navigation",
+    "previous": "Previous",
+    "next": "Next"
   }
 }
