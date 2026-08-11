@@ -98,7 +98,8 @@
       "deleteFailed": "Could not delete"
     },
     "actions": "Actions",
-    "language": "Language"
+    "language": "Language",
+    "currency": "Currency"
   },
   "steps": {
     "label": "Steps",
@@ -126,5 +127,12 @@
     "transferCount": "1 payment settles everything | {count} payments settle everything",
     "presence": "Only share each expense between those present that day",
     "presenceHint": "An expense is only charged to the people there on its date, in proportion to their shares. Someone who left the day before does not pay for the next day’s expense."
+  },
+  "currencies": {
+    "XXX": "Generic (no country)",
+    "EUR": "Euro",
+    "GBP": "Pound sterling",
+    "USD": "US dollar",
+    "CHF": "Swiss franc"
   }
 }

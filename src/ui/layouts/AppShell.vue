@@ -12,6 +12,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import StepTimeline from '@/ui/components/StepTimeline.vue'
 import StepNav from '@/ui/components/StepNav.vue'
 import LanguageMenu from '@/ui/components/LanguageMenu.vue'
+import CurrencyMenu from '@/ui/components/CurrencyMenu.vue'
 
 const { t } = useI18n()
 const vacationStore = useVacationStore()
@@ -45,7 +46,10 @@ watch(
     <header class="app-header">
       <div class="header-top">
         <span class="app-logo">{{ t('app.name') }}</span>
-        <LanguageMenu />
+        <div class="header-menus">
+          <CurrencyMenu />
+          <LanguageMenu />
+        </div>
       </div>
       <StepTimeline />
     </header>
@@ -89,6 +93,12 @@ watch(
   max-width: 800px;
   width: 100%;
   margin: 0 auto;
+}
+
+.header-menus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .app-logo {

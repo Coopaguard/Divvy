@@ -6,12 +6,14 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { useVacationStore } from '@/stores/vacationStore'
 import { formatCents } from '@/domains/shared/money'
+import { useCurrency } from '@/ui/composables/useCurrency'
 import ExpenseForm from './ExpenseForm.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import RowActions from './RowActions.vue'
 import type { Expense, ExpenseDraft } from '@/domains/expenses/types'
 
 const { t, locale } = useI18n()
+const { currency } = useCurrency()
 const expenseStore = useExpenseStore()
 const peopleStore = usePeopleStore()
 const vacationStore = useVacationStore()
@@ -34,7 +36,7 @@ function payerName(payerId: string): string {
 }
 
 function amount(cents: number): string {
-  return formatCents(cents, locale.value)
+  return formatCents(cents, locale.value, currency.value)
 }
 
 function formatDate(date: string): string {

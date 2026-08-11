@@ -5,39 +5,20 @@
 // Deux boutons par ligne mangent toute la largeur utile d'un tableau sur mobile
 // et poussent les colonnes qui portent l'information. Repliés sous un menu, ils
 // restent à un geste sans disputer la place aux données.
-import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDismissMenu } from '@/ui/composables/useDismissMenu'
 
 const { t } = useI18n()
 
 const emit = defineEmits<{ edit: []; delete: [] }>()
 
-const open = ref(false)
-const root = ref<HTMLElement | null>(null)
+const { open, root, toggle, close } = useDismissMenu()
 
 function run(action: 'edit' | 'delete'): void {
-  open.value = false
+  close()
   if (action === 'edit') emit('edit')
   else emit('delete')
 }
-
-function onDocumentPointerDown(event: MouseEvent): void {
-  if (root.value && !root.value.contains(event.target as Node)) open.value = false
-}
-
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') open.value = false
-}
-
-onMounted(() => {
-  document.addEventListener('mousedown', onDocumentPointerDown)
-  document.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', onDocumentPointerDown)
-  document.removeEventListener('keydown', onKeydown)
-})
 </script>
 
 <template>
@@ -59,7 +40,7 @@ onBeforeUnmount(() => {
       :aria-label="t('common.actions')"
       :aria-expanded="open"
       aria-haspopup="menu"
-      @click="open = !open"
+      @click="toggle"
     >
       …
     </button>

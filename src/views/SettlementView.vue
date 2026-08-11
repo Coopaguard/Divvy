@@ -11,8 +11,10 @@ import { usePeopleStore } from '@/stores/peopleStore'
 import { useVacationStore } from '@/stores/vacationStore'
 import { computeBalances, optimiseTransfers } from '@/domains/settlement/settle'
 import { formatCents } from '@/domains/shared/money'
+import { useCurrency } from '@/ui/composables/useCurrency'
 
 const { t, locale } = useI18n()
+const { currency } = useCurrency()
 const vacationStore = useVacationStore()
 const peopleStore = usePeopleStore()
 const expenseStore = useExpenseStore()
@@ -58,7 +60,7 @@ const allSquare = computed(() => hasSomethingToSettle.value && transfers.value.l
 const totalCents = computed(() => expenseStore.totalCents)
 
 function amount(cents: number): string {
-  return formatCents(cents, locale.value)
+  return formatCents(cents, locale.value, currency.value)
 }
 
 function personName(id: string): string {

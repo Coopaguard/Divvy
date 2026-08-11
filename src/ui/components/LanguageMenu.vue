@@ -3,9 +3,10 @@
 //
 // Deux drapeaux côte à côte laissaient croire à deux boutons d'action. Un menu
 // montre la langue *active* et n'ouvre les autres qu'à la demande.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { applyDocumentLocale, persistLocale, supportedLocales, type SupportedLocale } from '@/i18n'
+import { useDismissMenu } from '@/ui/composables/useDismissMenu'
 
 const { t, locale } = useI18n()
 
@@ -20,34 +21,14 @@ const languages = computed(() =>
 
 const current = computed(() => FLAGS[locale.value as SupportedLocale] ?? FLAGS.en)
 
-const open = ref(false)
-const root = ref<HTMLElement | null>(null)
+const { open, root, toggle, close } = useDismissMenu()
 
 function choose(code: SupportedLocale): void {
   locale.value = code
   persistLocale(code)
   applyDocumentLocale(code)
-  open.value = false
+  close()
 }
-
-/** Clicking anywhere else, or pressing Escape, closes the menu. */
-function onDocumentPointerDown(event: MouseEvent): void {
-  if (root.value && !root.value.contains(event.target as Node)) open.value = false
-}
-
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') open.value = false
-}
-
-onMounted(() => {
-  document.addEventListener('mousedown', onDocumentPointerDown)
-  document.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('mousedown', onDocumentPointerDown)
-  document.removeEventListener('keydown', onKeydown)
-})
 </script>
 
 <template>
@@ -58,7 +39,7 @@ onBeforeUnmount(() => {
       :aria-label="`${t('common.language')} — ${current.label}`"
       :aria-expanded="open"
       aria-haspopup="menu"
-      @click="open = !open"
+      @click="toggle"
     >
       <span class="lang-flag">{{ current.flag }}</span>
       <span class="lang-caret" aria-hidden="true">▾</span>

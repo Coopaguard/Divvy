@@ -98,7 +98,8 @@
       "deleteFailed": "Impossible de supprimer"
     },
     "actions": "Actions",
-    "language": "Langue"
+    "language": "Langue",
+    "currency": "Devise"
   },
   "steps": {
     "label": "Étapes",
@@ -126,5 +127,12 @@
     "transferCount": "1 virement suffit à tout solder | {count} virements suffisent à tout solder",
     "presence": "Ne partager chaque dépense qu’entre les présents ce jour-là",
     "presenceHint": "Une dépense n’est comptée que pour les personnes présentes à sa date, au prorata de leurs parts. Quelqu’un reparti la veille ne paie donc pas la dépense du lendemain."
+  },
+  "currencies": {
+    "XXX": "Générique (aucun pays)",
+    "EUR": "Euro",
+    "GBP": "Livre sterling",
+    "USD": "Dollar américain",
+    "CHF": "Franc suisse"
   }
 }
