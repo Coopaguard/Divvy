@@ -20,7 +20,14 @@ Déployer automatiquement la dernière version de Divvy sur GitHub Pages après 
 
 ## URL de démo
 
-`https://coopaguard.github.io/divvy/`
+`https://coopaguard.github.io/Divvy/`
+
+GitHub Pages sert un site de projet sous le nom du repository **avec sa casse
+exacte**, et les chemins sont sensibles à la casse. `vite.config.ts` utilise donc
+un `base: './'` relatif : les assets sont résolus par rapport au document, ce qui
+rend le build indépendant du chemin de publication (et résistant à un renommage
+du repository). Un `base` absolu codé en dur produirait une page blanche à la
+moindre différence de casse.
 
 ## Critères de validation
 
