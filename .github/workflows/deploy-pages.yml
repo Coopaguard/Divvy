@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-      # TEMPORAIRE — à retirer avant le merge.
-      # Permet de valider la chaîne verify -> build -> deploy depuis la branche,
-      # le workflow ne se déclenchant sinon que sur main.
-      - claude/repo-review-recent-changes-d4ey62
 
 permissions:
   contents: read
