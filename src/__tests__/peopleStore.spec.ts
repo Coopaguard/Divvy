@@ -87,6 +87,31 @@ describe('peopleStore', () => {
     expect(store.error).toBe('delete failed')
   })
 
+  it('deleting a person drops the expenses they paid from memory too', async () => {
+    const { useExpenseStore } = await import('@/stores/expenseStore')
+    const expenseStore = useExpenseStore()
+    const store = usePeopleStore()
+    const person = await store.addPerson('vac-1', draft)
+
+    await expenseStore.addExpense('vac-1', {
+      payerId: person!.id,
+      amountCents: 500,
+      label: 'Sienne',
+      date: '2025-07-02',
+    })
+    await expenseStore.addExpense('vac-1', {
+      payerId: 'someone-else',
+      amountCents: 900,
+      label: "D'un autre",
+      date: '2025-07-03',
+    })
+
+    await store.deletePerson(person!.id)
+
+    // Storage cascades; the in-memory list must follow, and only for that payer.
+    expect(expenseStore.expenses.map((expense) => expense.label)).toEqual(["D'un autre"])
+  })
+
   it('leaves the list empty when loading fails', async () => {
     const { peopleStorage } = await import('@/domains/storage/db')
     vi.mocked(peopleStorage.getByVacationId).mockRejectedValueOnce(new Error('read failed'))

@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // PeopleList — list people with add/edit/delete actions
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { useVacationStore } from '@/stores/vacationStore'
+import { useExpenseStore } from '@/stores/expenseStore'
 import PersonForm from './PersonForm.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import type { Person, PersonDraft } from '@/domains/people/types'
@@ -11,6 +12,7 @@ import type { Person, PersonDraft } from '@/domains/people/types'
 const { t } = useI18n()
 const peopleStore = usePeopleStore()
 const vacationStore = useVacationStore()
+const expenseStore = useExpenseStore()
 
 const showForm = ref(false)
 const editingPerson = ref<Person | null>(null)
@@ -63,6 +65,15 @@ async function confirmDelete(id: string): Promise<void> {
   if (!deleted) failure.value = t('common.error.deleteFailed')
   confirmDeleteId.value = null
 }
+
+// Deleting a person cascades to the expenses they paid: say so up front.
+const deleteMessage = computed(() => {
+  const id = confirmDeleteId.value
+  const count = id ? expenseStore.countByPayer(id) : 0
+  return count > 0
+    ? t('people.confirmDeleteWithExpenses', { count }, count)
+    : t('people.confirmDelete')
+})
 
 function formatDate(date: string): string {
   if (!date) return '—'
@@ -131,7 +142,7 @@ function formatDate(date: string): string {
     <!-- Confirm delete dialog -->
     <ConfirmDialog
       :open="confirmDeleteId !== null"
-      :message="t('people.confirmDelete')"
+      :message="deleteMessage"
       @confirm="confirmDelete(confirmDeleteId!)"
       @cancel="confirmDeleteId = null"
     />

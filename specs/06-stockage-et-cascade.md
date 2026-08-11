@@ -10,6 +10,12 @@ Le stockage IndexedDB (`src/domains/storage/db.ts`) suit un **modèle de propri�
   vacance**, via un champ et un index `vacationId`.
 - Supprimer une vacance supprime **en cascade** tout ce qui lui est rattaché.
 
+Un **second niveau de rattachement** existe depuis la phase 4 : une Dépense
+pointe aussi vers la Personne qui l'a payée (`payerId`, indexé). Supprimer une
+personne supprime ses dépenses — sans quoi le calcul de répartition (phase 6)
+travaillerait sur un payeur inexistant. L'interface annonce le nombre de
+dépenses concernées avant de confirmer.
+
 ## Garanties
 
 - **Atomicité** : la cascade s'exécute dans **une seule transaction IndexedDB**
@@ -18,20 +24,36 @@ Le stockage IndexedDB (`src/domains/storage/db.ts`) suit un **modèle de propri�
 - **Aucun orphelin** : aucun enregistrement ne peut survivre à la vacance qui le
   possède.
 - **Rattrapage** : `pruneOrphanRecords()` supprime les enregistrements orphelins
-  écrits avant la mise en place de la cascade. Appelé au chargement de
-  l'application, en best effort (un échec ne bloque jamais le démarrage).
+  écrits avant la mise en place de la cascade — vacance inexistante, puis payeur
+  inexistant. Les deux passes sont ordonnées : les dépenses d'une personne
+  elle-même supprimée comme orpheline ne survivent pas à la même passe. Appelé
+  au chargement de l'application, en best effort (un échec ne bloque jamais le
+  démarrage).
 
 ## Brancher un nouveau domaine
 
-Les phases 4 à 6 ajoutent les Dépenses et la répartition. Pour qu'un nouveau
-domaine soit couvert par la cascade, il suffit de :
+Pour qu'un nouveau domaine soit couvert par la cascade, il suffit de :
 
-1. Ajouter le nom du store à `VACATION_OWNED_STORES` dans `db.ts`.
-2. Donner à ses enregistrements un champ `vacationId`.
+1. Le déclarer dans `SCHEMA` (nom du store et index) dans `db.ts`.
+2. L'ajouter à `VACATION_OWNED_STORES`, et à `PERSON_OWNED_STORES` s'il est
+   aussi rattaché à une personne.
+3. Donner à ses enregistrements un champ `vacationId`.
+4. **Incrémenter `DB_VERSION`.**
 
-Le schéma (création du store et de son index), la cascade et le nettoyage des
-orphelins s'appliquent alors automatiquement — il n'y a pas de logique de
-suppression à dupliquer par domaine.
+Le schéma, les cascades et le nettoyage des orphelins s'appliquent alors
+automatiquement — il n'y a pas de logique de suppression à dupliquer par
+domaine.
+
+### Migration de schéma
+
+`DB_VERSION` **doit** être incrémenté à chaque évolution du schéma :
+`onupgradeneeded` ne se déclenche que sur changement de version, donc sans cela
+les utilisateurs disposant déjà d'une base ne verraient jamais le nouveau store.
+`applySchema()` est idempotent — il ne crée que ce qui manque — et sert donc à
+la fois à l'initialisation et à la migration, sans perte de données existantes.
+
+Versions : **v1** vacances + personnes (phase 1) ; **v2** ajout des dépenses
+(phase 4).
 
 ## Connexion
 
@@ -48,6 +70,13 @@ capturent (voir `src/stores/asyncState.ts`) :
 - Une opération échouée renseigne `error` et retourne `null` / `false` au lieu
   de propager une exception non gérée.
 - L'UI affiche le message correspondant et conserve la saisie de l'utilisateur.
+
+## Montants monétaires
+
+Les montants sont stockés en **centimes entiers** (`amountCents`), jamais en
+flottants : `0.1 + 0.2 !== 0.3` en IEEE-754, et l'écart se propagerait aux
+totaux puis à la répartition. La conversion n'a lieu qu'aux frontières — saisie
+et affichage — via `domains/shared/money.ts`.
 
 ## Référence
 

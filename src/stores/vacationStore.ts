@@ -1,4 +1,9 @@
 // Pinia store — Vacances
+//
+// Le store tient *toutes* les vacances enregistrées et celle qui est
+// sélectionnée. La sélection est volontairement vide au démarrage : le parcours
+// commence par le choix d'une vacance, et les étapes suivantes restent
+// verrouillées tant qu'aucune n'est choisie.
 
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
@@ -7,24 +12,27 @@ import { generateId, nowIso } from '@/domains/shared/entity'
 import { useAsyncState } from './asyncState'
 import type { Vacation, VacationDraft } from '@/domains/vacations/types'
 
-/** MVP: a single vacation is active at a time — the most recently updated one. */
-function mostRecentlyUpdated(vacations: Vacation[]): Vacation | null {
-  return (
-    vacations.reduce<Vacation | null>(
-      (latest, current) =>
-        !latest || current.updatedAt.localeCompare(latest.updatedAt) > 0 ? current : latest,
-      null,
-    ) ?? null
-  )
-}
-
 export const useVacationStore = defineStore('vacations', () => {
-  const vacation = ref<Vacation | null>(null)
+  const vacations = ref<Vacation[]>([])
+  const selectedId = ref<string | null>(null)
   const { loading, error, run, clearError } = useAsyncState()
+
+  /** The selected vacation, or null while the user has not picked one. */
+  const vacation = computed<Vacation | null>(
+    () => vacations.value.find((item) => item.id === selectedId.value) ?? null,
+  )
 
   const hasVacation = computed(() => vacation.value !== null)
 
-  /** Restores the active vacation from storage. */
+  /** Most recently updated first — the one the user is most likely to resume. */
+  const sortedVacations = computed<Vacation[]>(() =>
+    [...vacations.value].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+  )
+
+  /**
+   * Loads every stored vacation. Deliberately does *not* select one: the first
+   * step of the journey is choosing, so a fresh start shows the list.
+   */
   async function loadFromStorage(): Promise<void> {
     const result = await run(async () => {
       // Housekeeping: drop records left behind by versions that deleted a
@@ -33,10 +41,27 @@ export const useVacationStore = defineStore('vacations', () => {
       return vacationStorage.getAll()
     })
     if (!result.ok) return
-    vacation.value = mostRecentlyUpdated(result.value)
+    vacations.value = result.value
+
+    // A vacation deleted in another tab must not stay selected here.
+    if (selectedId.value && !result.value.some((item) => item.id === selectedId.value)) {
+      selectedId.value = null
+    }
   }
 
-  /** Creates a vacation and makes it the active one. Null when the write failed. */
+  /** Selects an existing vacation. Unknown ids are ignored. */
+  function select(id: string): boolean {
+    if (!vacations.value.some((item) => item.id === id)) return false
+    selectedId.value = id
+    return true
+  }
+
+  /** Goes back to "no vacation chosen", which locks the later steps again. */
+  function clearSelection(): void {
+    selectedId.value = null
+  }
+
+  /** Creates a vacation and selects it. Null when the write failed. */
   async function createVacation(draft: VacationDraft): Promise<Vacation | null> {
     const timestamp = nowIso()
     const created: Vacation = {
@@ -48,11 +73,12 @@ export const useVacationStore = defineStore('vacations', () => {
     const result = await run(() => vacationStorage.save(created))
     if (!result.ok) return null
 
-    vacation.value = created
+    vacations.value.push(created)
+    selectedId.value = created.id
     return created
   }
 
-  /** Updates the active vacation. Returns false when there is none or the write failed. */
+  /** Updates the selected vacation. False when there is none or the write failed. */
   async function updateVacation(draft: VacationDraft): Promise<boolean> {
     const current = vacation.value
     if (!current) return false
@@ -61,32 +87,41 @@ export const useVacationStore = defineStore('vacations', () => {
     const result = await run(() => vacationStorage.save(updated))
     if (!result.ok) return false
 
-    vacation.value = updated
+    const index = vacations.value.findIndex((item) => item.id === updated.id)
+    if (index !== -1) vacations.value[index] = updated
     return true
   }
 
   /**
-   * Supprime la vacance active **et tout ce qui lui est rattaché** (Personnes,
-   * puis Dépenses et répartition). Retourne false si la suppression a échoué —
-   * dans ce cas rien n'a été supprimé et la vacance reste active.
+   * Supprime une vacance **et tout ce qui lui est rattaché** (Personnes, puis
+   * Dépenses et répartition). Sans argument, supprime la vacance sélectionnée.
+   * Retourne false si la suppression a échoué — dans ce cas rien n'a été
+   * supprimé et la sélection est inchangée.
    */
-  async function deleteVacation(): Promise<boolean> {
-    const current = vacation.value
-    if (!current) return false
+  async function deleteVacation(id?: string): Promise<boolean> {
+    const targetId = id ?? selectedId.value
+    if (!targetId) return false
 
-    const result = await run(() => vacationStorage.delete(current.id))
+    const result = await run(() => vacationStorage.delete(targetId))
     if (!result.ok) return false
 
-    vacation.value = null
+    vacations.value = vacations.value.filter((item) => item.id !== targetId)
+    // Deleting the vacation being worked on sends the user back to the choice.
+    if (selectedId.value === targetId) selectedId.value = null
     return true
   }
 
   return {
+    vacations,
+    sortedVacations,
+    selectedId,
     vacation,
     loading,
     error,
     hasVacation,
     loadFromStorage,
+    select,
+    clearSelection,
     createVacation,
     updateVacation,
     deleteVacation,

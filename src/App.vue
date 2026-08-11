@@ -1,8 +1,11 @@
 <script setup lang="ts">
-// Divvy — root component (AppShell)
+// Divvy — root component
 // All modules: Vue Router, Pinia, Vue I18n registered in main.ts
+import AppShell from '@/ui/layouts/AppShell.vue'
 </script>
 
 <template>
-  <RouterView />
+  <AppShell>
+    <RouterView />
+  </AppShell>
 </template>

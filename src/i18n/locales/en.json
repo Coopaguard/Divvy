@@ -3,22 +3,8 @@
     "name": "Divvy",
     "tagline": "Easily split vacation expenses"
   },
-  "nav": {
-    "home": "Home",
-    "vacations": "Vacation",
-    "people": "People",
-    "expenses": "Expenses",
-    "results": "Results",
-    "export": "Export .divvy",
-    "menu": "Menu"
-  },
-  "home": {
-    "resume": "Resume",
-    "import": "Import a .divvy file",
-    "new": "New vacation"
-  },
   "vacations": {
-    "title": "Vacation",
+    "title": "Vacations",
     "fields": {
       "name": "Title",
       "startDate": "Start date",
@@ -30,8 +16,12 @@
       "endDateRequired": "End date is required",
       "endBeforeStart": "End date must be after start date"
     },
-    "delete": "Delete vacation",
-    "confirmDelete": "Delete this vacation? Everyone attached to it will be deleted too."
+    "confirmDelete": "Delete this vacation? Everyone attached to it will be deleted too.",
+    "new": "New vacation",
+    "edit": "Edit vacation",
+    "select": "Select",
+    "selected": "Selected",
+    "empty": "No vacation saved yet"
   },
   "people": {
     "title": "People",
@@ -54,7 +44,8 @@
       "arrivalRequired": "Arrival date is required",
       "departureRequired": "Departure date is required",
       "departureBeforeArrival": "Departure must be after arrival"
-    }
+    },
+    "confirmDeleteWithExpenses": "Delete this person? The expense they paid will be deleted too. | Delete this person? The {count} expenses they paid will be deleted too."
   },
   "expenses": {
     "title": "Expenses",
@@ -69,12 +60,27 @@
       "edit": "Edit",
       "delete": "Delete"
     },
-    "empty": "No expenses added yet"
+    "empty": "No expenses added yet",
+    "total": "Total",
+    "confirmDelete": "Delete this expense?",
+    "noPeople": "Add at least one person before entering an expense",
+    "errors": {
+      "payerRequired": "A payer is required",
+      "amountRequired": "The amount is required",
+      "amountInvalid": "Invalid amount (2 decimals maximum)",
+      "amountPositive": "The amount must be greater than 0",
+      "labelRequired": "The label is required",
+      "dateRequired": "The date is required"
+    }
   },
   "results": {
-    "title": "Results",
+    "title": "Split",
     "chart": "Payers breakdown",
-    "settlement": "Who owes whom"
+    "settlement": "Who owes whom",
+    "totalsByPerson": "Total paid per person",
+    "paid": "Total paid",
+    "empty": "No expense entered yet",
+    "others": "1 other | {count} others"
   },
   "common": {
     "save": "Save",
@@ -91,5 +97,18 @@
       "saveFailed": "Could not save the changes",
       "deleteFailed": "Could not delete"
     }
+  },
+  "steps": {
+    "label": "Steps",
+    "vacations": "Vacations",
+    "people": "People",
+    "expenses": "Expenses",
+    "results": "Split",
+    "locked": "Pick a vacation first"
+  },
+  "stepNav": {
+    "label": "Step navigation",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

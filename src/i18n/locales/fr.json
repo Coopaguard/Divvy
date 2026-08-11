@@ -3,20 +3,6 @@
     "name": "Divvy",
     "tagline": "Partagez simplement vos dépenses de vacances"
   },
-  "nav": {
-    "home": "Accueil",
-    "vacations": "Vacances",
-    "people": "Personnes",
-    "expenses": "Dépenses",
-    "results": "Résultats",
-    "export": "Exporter .divvy",
-    "menu": "Menu"
-  },
-  "home": {
-    "resume": "Reprendre",
-    "import": "Importer un fichier .divvy",
-    "new": "Nouvelles vacances"
-  },
   "vacations": {
     "title": "Vacances",
     "fields": {
@@ -30,8 +16,12 @@
       "endDateRequired": "La date de fin est requise",
       "endBeforeStart": "La date de fin doit être après la date de début"
     },
-    "delete": "Supprimer les vacances",
-    "confirmDelete": "Supprimer ces vacances ? Les personnes rattachées seront également supprimées."
+    "confirmDelete": "Supprimer ces vacances ? Les personnes rattachées seront également supprimées.",
+    "new": "Nouvelle vacance",
+    "edit": "Modifier la vacance",
+    "select": "Choisir",
+    "selected": "Sélectionnée",
+    "empty": "Aucune vacance enregistrée"
   },
   "people": {
     "title": "Personnes",
@@ -54,7 +44,8 @@
       "arrivalRequired": "La date d'arrivée est requise",
       "departureRequired": "La date de départ est requise",
       "departureBeforeArrival": "Le départ doit être après l'arrivée"
-    }
+    },
+    "confirmDeleteWithExpenses": "Supprimer cette personne ? Sa dépense sera également supprimée. | Supprimer cette personne ? Ses {count} dépenses seront également supprimées."
   },
   "expenses": {
     "title": "Dépenses",
@@ -69,12 +60,27 @@
       "edit": "Modifier",
       "delete": "Supprimer"
     },
-    "empty": "Aucune dépense saisie"
+    "empty": "Aucune dépense saisie",
+    "total": "Total",
+    "confirmDelete": "Supprimer cette dépense ?",
+    "noPeople": "Ajoutez au moins une personne avant de saisir une dépense",
+    "errors": {
+      "payerRequired": "Le payeur est requis",
+      "amountRequired": "Le montant est requis",
+      "amountInvalid": "Montant invalide (2 décimales maximum)",
+      "amountPositive": "Le montant doit être supérieur à 0",
+      "labelRequired": "Le libellé est requis",
+      "dateRequired": "La date est requise"
+    }
   },
   "results": {
-    "title": "Résultats",
+    "title": "Répartition",
     "chart": "Répartition des payeurs",
-    "settlement": "Qui doit combien à qui"
+    "settlement": "Qui doit combien à qui",
+    "totalsByPerson": "Total payé par personne",
+    "paid": "Total payé",
+    "empty": "Aucune dépense saisie pour le moment",
+    "others": "1 autre | {count} autres"
   },
   "common": {
     "save": "Enregistrer",
@@ -91,5 +97,18 @@
       "saveFailed": "Impossible d'enregistrer les modifications",
       "deleteFailed": "Impossible de supprimer"
     }
+  },
+  "steps": {
+    "label": "Étapes",
+    "vacations": "Vacances",
+    "people": "Personnes",
+    "expenses": "Dépenses",
+    "results": "Répartition",
+    "locked": "Choisissez d’abord une vacance"
+  },
+  "stepNav": {
+    "label": "Navigation entre les étapes",
+    "previous": "Précédent",
+    "next": "Suivant"
   }
 }
