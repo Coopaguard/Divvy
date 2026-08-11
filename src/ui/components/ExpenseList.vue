@@ -8,6 +8,7 @@ import { useVacationStore } from '@/stores/vacationStore'
 import { formatCents } from '@/domains/shared/money'
 import ExpenseForm from './ExpenseForm.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
+import RowActions from './RowActions.vue'
 import type { Expense, ExpenseDraft } from '@/domains/expenses/types'
 
 const { t, locale } = useI18n()
@@ -125,13 +126,8 @@ async function confirmDelete(id: string): Promise<void> {
           <td>{{ expense.label }}</td>
           <td>{{ payerName(expense.payerId) }}</td>
           <td class="numeric">{{ amount(expense.amountCents) }}</td>
-          <td class="row-actions">
-            <button class="btn-secondary btn-sm" @click="openEdit(expense)">
-              {{ t('common.edit') }}
-            </button>
-            <button class="btn-danger btn-sm" @click="confirmDeleteId = expense.id">
-              {{ t('common.delete') }}
-            </button>
+          <td class="actions-cell">
+            <RowActions @edit="openEdit(expense)" @delete="confirmDeleteId = expense.id" />
           </td>
         </tr>
       </tbody>
@@ -235,15 +231,11 @@ async function confirmDelete(id: string): Promise<void> {
   color: var(--text);
 }
 
-.row-actions {
-  display: flex;
-  gap: var(--space-xs);
-  justify-content: flex-end;
-}
-
-.btn-sm {
-  padding: 2px var(--space-sm);
-  font-size: var(--font-size-xs);
+.actions-cell {
+  text-align: right;
+  /* Shrink to the button: this column carries no data, only a way in. */
+  width: 1%;
+  white-space: nowrap;
 }
 
 .form-panel {
@@ -257,6 +249,19 @@ async function confirmDelete(id: string): Promise<void> {
   font-weight: 600;
   margin-bottom: var(--space-md);
   color: var(--text);
+}
+
+/* Phones: the actions collapse into a menu, so the cells can give the columns
+   that actually carry information the room they need. */
+@media (max-width: 767px) {
+  .expense-table th,
+  .expense-table td {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .actions-cell {
+    padding-left: 0;
+  }
 }
 
 @media (max-width: 600px) {

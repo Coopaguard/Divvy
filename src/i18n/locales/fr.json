@@ -74,7 +74,7 @@
     }
   },
   "results": {
-    "title": "Répartition",
+    "title": "Récapitulatif",
     "chart": "Répartition des payeurs",
     "settlement": "Qui doit combien à qui",
     "totalsByPerson": "Total payé par personne",
@@ -96,14 +96,16 @@
       "loadFailed": "Impossible de charger les données enregistrées",
       "saveFailed": "Impossible d'enregistrer les modifications",
       "deleteFailed": "Impossible de supprimer"
-    }
+    },
+    "actions": "Actions",
+    "language": "Langue"
   },
   "steps": {
     "label": "Étapes",
     "vacations": "Vacances",
     "people": "Personnes",
     "expenses": "Dépenses",
-    "results": "Répartition",
+    "results": "Récapitulatif",
     "locked": "Choisissez d’abord une vacance",
     "settlement": "Remboursements"
   },

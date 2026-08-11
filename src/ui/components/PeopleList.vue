@@ -7,6 +7,7 @@ import { useVacationStore } from '@/stores/vacationStore'
 import { useExpenseStore } from '@/stores/expenseStore'
 import PersonForm from './PersonForm.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
+import RowActions from './RowActions.vue'
 import type { Person, PersonDraft } from '@/domains/people/types'
 
 const { t } = useI18n()
@@ -112,13 +113,8 @@ function formatDate(date: string): string {
           <td>{{ person.shares }}</td>
           <td>{{ formatDate(person.arrivalDate) }}</td>
           <td>{{ formatDate(person.departureDate) }}</td>
-          <td class="row-actions">
-            <button class="btn-secondary btn-sm" @click="openEdit(person)">
-              {{ t('common.edit') }}
-            </button>
-            <button class="btn-danger btn-sm" @click="confirmDeleteId = person.id">
-              {{ t('common.delete') }}
-            </button>
+          <td class="actions-cell">
+            <RowActions @edit="openEdit(person)" @delete="confirmDeleteId = person.id" />
           </td>
         </tr>
       </tbody>
@@ -199,15 +195,11 @@ function formatDate(date: string): string {
   border-bottom: none;
 }
 
-.row-actions {
-  display: flex;
-  gap: var(--space-xs);
-  justify-content: flex-end;
-}
-
-.btn-sm {
-  padding: 2px var(--space-sm);
-  font-size: var(--font-size-xs);
+.actions-cell {
+  text-align: right;
+  /* Shrink to the button: this column carries no data, only a way in. */
+  width: 1%;
+  white-space: nowrap;
 }
 
 .form-panel {
@@ -221,6 +213,19 @@ function formatDate(date: string): string {
   font-weight: 600;
   margin-bottom: var(--space-md);
   color: var(--text);
+}
+
+/* Phones: the actions collapse into a menu, so the cells can give the columns
+   that actually carry information the room they need. */
+@media (max-width: 767px) {
+  .people-table th,
+  .people-table td {
+    padding: var(--space-xs) var(--space-sm);
+  }
+
+  .actions-cell {
+    padding-left: 0;
+  }
 }
 
 @media (max-width: 600px) {

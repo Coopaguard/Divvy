@@ -9,25 +9,14 @@ import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { useExpenseStore } from '@/stores/expenseStore'
-import { applyDocumentLocale, persistLocale, type SupportedLocale } from '@/i18n'
 import StepTimeline from '@/ui/components/StepTimeline.vue'
 import StepNav from '@/ui/components/StepNav.vue'
+import LanguageMenu from '@/ui/components/LanguageMenu.vue'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const vacationStore = useVacationStore()
 const peopleStore = usePeopleStore()
 const expenseStore = useExpenseStore()
-
-const languages: { code: SupportedLocale; flag: string; label: string }[] = [
-  { code: 'fr', flag: '🇫🇷', label: 'Français' },
-  { code: 'en', flag: '🇬🇧', label: 'English' },
-]
-
-function setLocale(code: SupportedLocale): void {
-  locale.value = code
-  persistLocale(code)
-  applyDocumentLocale(code)
-}
 
 void vacationStore.loadFromStorage()
 
@@ -56,19 +45,7 @@ watch(
     <header class="app-header">
       <div class="header-top">
         <span class="app-logo">{{ t('app.name') }}</span>
-        <div class="lang-selector">
-          <button
-            v-for="lang in languages"
-            :key="lang.code"
-            :class="['lang-btn', { active: locale === lang.code }]"
-            :title="lang.label"
-            :aria-label="lang.label"
-            :aria-pressed="locale === lang.code"
-            @click="setLocale(lang.code)"
-          >
-            {{ lang.flag }}
-          </button>
-        </div>
+        <LanguageMenu />
       </div>
       <StepTimeline />
     </header>
@@ -135,32 +112,6 @@ watch(
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--text);
-}
-
-.lang-selector {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.lang-btn {
-  background: none;
-  border: 2px solid transparent;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 1.4rem;
-  line-height: 1;
-  padding: 2px 4px;
-  transition: border-color 0.15s ease, opacity 0.15s ease;
-  opacity: 0.5;
-}
-
-.lang-btn:hover {
-  opacity: 0.85;
-}
-
-.lang-btn.active {
-  border-color: var(--primary);
-  opacity: 1;
 }
 
 @media (min-width: 768px) {

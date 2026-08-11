@@ -11,31 +11,11 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { formatCents } from '@/domains/shared/money'
 import { distribute } from '@/domains/shared/allocation'
+import { OTHER_COLOR, SERIES_COLORS } from '@/domains/shared/palette'
 
 const { t, locale } = useI18n()
 const expenseStore = useExpenseStore()
 const peopleStore = usePeopleStore()
-
-/**
- * Categorical hues in fixed order, validated against the white chart surface
- * (lightness band, chroma floor, CVD separation, normal-vision floor).
- *
- * A hue belongs to a *person*, picked by their position in the people list —
- * never by their rank in the chart. Paying more must not repaint everyone.
- */
-const SERIES_COLORS = [
-  '#2a78d6',
-  '#eb6834',
-  '#1baf7a',
-  '#eda100',
-  '#e87ba4',
-  '#008300',
-  '#4a3aa7',
-  '#e34948',
-] as const
-
-/** Recessive grey for the folded tail — it is a bucket, not a series. */
-const OTHER_COLOR = '#8c8c88'
 
 /** Above this, slices get too thin to compare; the tail folds into "Others". */
 const MAX_SLICES = 6

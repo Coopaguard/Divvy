@@ -74,7 +74,7 @@
     }
   },
   "results": {
-    "title": "Split",
+    "title": "Summary",
     "chart": "Payers breakdown",
     "settlement": "Who owes whom",
     "totalsByPerson": "Total paid per person",
@@ -96,14 +96,16 @@
       "loadFailed": "Could not load the saved data",
       "saveFailed": "Could not save the changes",
       "deleteFailed": "Could not delete"
-    }
+    },
+    "actions": "Actions",
+    "language": "Language"
   },
   "steps": {
     "label": "Steps",
     "vacations": "Vacations",
     "people": "People",
     "expenses": "Expenses",
-    "results": "Split",
+    "results": "Summary",
     "locked": "Pick a vacation first",
     "settlement": "Reimbursements"
   },
