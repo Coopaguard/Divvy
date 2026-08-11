@@ -16,37 +16,51 @@ const showForm = ref(false)
 const editingPerson = ref<Person | null>(null)
 const confirmDeleteId = ref<string | null>(null)
 const saving = ref(false)
+const failure = ref<string | null>(null)
 
 function openAdd(): void {
   editingPerson.value = null
+  failure.value = null
   showForm.value = true
 }
 
 function openEdit(person: Person): void {
   editingPerson.value = person
+  failure.value = null
   showForm.value = true
 }
 
 function cancelForm(): void {
   showForm.value = false
   editingPerson.value = null
+  failure.value = null
 }
 
 async function savePerson(draft: PersonDraft): Promise<void> {
-  if (!vacationStore.vacation) return
+  const vacation = vacationStore.vacation
+  if (!vacation) return
+
   saving.value = true
-  if (editingPerson.value) {
-    await peopleStore.updatePerson(editingPerson.value.id, draft)
-  } else {
-    await peopleStore.addPerson(vacationStore.vacation.id, draft)
-  }
+  failure.value = null
+  const editing = editingPerson.value
+  const saved = editing
+    ? await peopleStore.updatePerson(editing.id, draft)
+    : (await peopleStore.addPerson(vacation.id, draft)) !== null
   saving.value = false
+
+  // Keep the form open on failure so the input is not lost.
+  if (!saved) {
+    failure.value = t('common.error.saveFailed')
+    return
+  }
   showForm.value = false
   editingPerson.value = null
 }
 
 async function confirmDelete(id: string): Promise<void> {
-  await peopleStore.deletePerson(id)
+  failure.value = null
+  const deleted = await peopleStore.deletePerson(id)
+  if (!deleted) failure.value = t('common.error.deleteFailed')
   confirmDeleteId.value = null
 }
 
@@ -112,6 +126,8 @@ function formatDate(date: string): string {
       />
     </div>
 
+    <p v-if="failure" class="list-failure" role="alert">{{ failure }}</p>
+
     <!-- Confirm delete dialog -->
     <ConfirmDialog
       :open="confirmDeleteId !== null"
@@ -134,6 +150,12 @@ function formatDate(date: string): string {
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--text);
+}
+
+.list-failure {
+  font-size: var(--font-size-sm);
+  color: #cf222e;
+  padding-top: var(--space-md);
 }
 
 .empty-state {

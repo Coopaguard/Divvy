@@ -12,6 +12,8 @@ const showNewForm = ref(false)
 const newName = ref('')
 const newStart = ref('')
 const newEnd = ref('')
+const creating = ref(false)
+const failure = ref<string | null>(null)
 const errors = ref<Record<string, string>>({})
 
 function validate(): boolean {
@@ -27,12 +29,16 @@ function validate(): boolean {
 
 async function startNew(): Promise<void> {
   if (!validate()) return
+  creating.value = true
+  failure.value = null
   const draft: VacationDraft = {
     name: newName.value.trim(),
     startDate: newStart.value,
     endDate: newEnd.value,
   }
-  await vacationStore.createVacation(draft)
+  const created = await vacationStore.createVacation(draft)
+  if (!created) failure.value = t('common.error.saveFailed')
+  creating.value = false
 }
 </script>
 
@@ -84,12 +90,19 @@ async function startNew(): Promise<void> {
             <span v-if="errors.endDate" class="field-error">{{ errors.endDate }}</span>
           </div>
         </div>
+        <p v-if="failure" class="form-failure" role="alert">{{ failure }}</p>
+
         <div class="form-actions">
-          <button type="button" class="btn-secondary" @click="showNewForm = false">
+          <button
+            type="button"
+            class="btn-secondary"
+            :disabled="creating"
+            @click="showNewForm = false"
+          >
             {{ t('common.cancel') }}
           </button>
-          <button type="submit" class="btn-primary">
-            {{ t('common.save') }}
+          <button type="submit" class="btn-primary" :disabled="creating">
+            {{ creating ? t('common.loading') : t('common.save') }}
           </button>
         </div>
       </form>
@@ -98,6 +111,11 @@ async function startNew(): Promise<void> {
 </template>
 
 <style scoped>
+.form-failure {
+  font-size: var(--font-size-sm);
+  color: #cf222e;
+}
+
 .home-screen {
   display: flex;
   align-items: center;

@@ -3,19 +3,20 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
-import { LOCALE_STORAGE_KEY } from '@/i18n'
+import { applyDocumentLocale, persistLocale, type SupportedLocale } from '@/i18n'
 
 const { t, locale } = useI18n()
 const vacationStore = useVacationStore()
 
-const languages = [
+const languages: { code: SupportedLocale; flag: string; label: string }[] = [
   { code: 'fr', flag: '🇫🇷', label: 'Français' },
   { code: 'en', flag: '🇬🇧', label: 'English' },
 ]
 
-function setLocale(code: string): void {
+function setLocale(code: SupportedLocale): void {
   locale.value = code
-  localStorage.setItem(LOCALE_STORAGE_KEY, code)
+  persistLocale(code)
+  applyDocumentLocale(code)
 }
 
 const menuOpen = ref(false)
@@ -68,6 +69,8 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
           :key="lang.code"
           :class="['lang-btn', { active: locale === lang.code }]"
           :title="lang.label"
+          :aria-label="lang.label"
+          :aria-pressed="locale === lang.code"
           @click="setLocale(lang.code)"
         >
           {{ lang.flag }}
@@ -78,7 +81,12 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
     <!-- Mobile: header + burger -->
     <header class="mobile-header">
       <span class="mobile-logo">{{ t('app.name') }}</span>
-      <button class="burger-btn" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
+      <button
+        class="burger-btn"
+        :aria-expanded="menuOpen"
+        :aria-label="t('nav.menu')"
+        @click="menuOpen = !menuOpen"
+      >
         <span class="burger-icon" :class="{ open: menuOpen }">
           <span /><span /><span />
         </span>
@@ -100,6 +108,8 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
           :key="lang.code"
           :class="['lang-btn', { active: locale === lang.code }]"
           :title="lang.label"
+          :aria-label="lang.label"
+          :aria-pressed="locale === lang.code"
           @click="setLocale(lang.code)"
         >
           {{ lang.flag }}

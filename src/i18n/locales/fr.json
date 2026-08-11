@@ -9,7 +9,8 @@
     "people": "Personnes",
     "expenses": "Dépenses",
     "results": "Résultats",
-    "export": "Exporter .divvy"
+    "export": "Exporter .divvy",
+    "menu": "Menu"
   },
   "home": {
     "resume": "Reprendre",
@@ -28,7 +29,9 @@
       "startDateRequired": "La date de début est requise",
       "endDateRequired": "La date de fin est requise",
       "endBeforeStart": "La date de fin doit être après la date de début"
-    }
+    },
+    "delete": "Supprimer les vacances",
+    "confirmDelete": "Supprimer ces vacances ? Les personnes rattachées seront également supprimées."
   },
   "people": {
     "title": "Personnes",
@@ -83,7 +86,10 @@
     "loading": "Chargement…",
     "error": {
       "import": "Erreur lors de l'import du fichier",
-      "invalidData": "Données invalides"
+      "invalidData": "Données invalides",
+      "loadFailed": "Impossible de charger les données enregistrées",
+      "saveFailed": "Impossible d'enregistrer les modifications",
+      "deleteFailed": "Impossible de supprimer"
     }
   }
 }

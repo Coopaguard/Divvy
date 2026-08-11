@@ -5,9 +5,14 @@ import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
 import type { Person, PersonDraft } from '@/domains/people/types'
 
-const props = defineProps<{
-  person?: Person | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    person?: Person | null
+    /** Blocks the actions while the parent persists the draft. */
+    disabled?: boolean
+  }>(),
+  { person: null, disabled: false },
+)
 
 const emit = defineEmits<{
   save: [draft: PersonDraft]
@@ -110,11 +115,11 @@ function submit(): void {
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn-secondary" @click="emit('cancel')">
+      <button type="button" class="btn-secondary" :disabled="disabled" @click="emit('cancel')">
         {{ t('common.cancel') }}
       </button>
-      <button type="button" class="btn-primary" @click="submit">
-        {{ t('common.save') }}
+      <button type="button" class="btn-primary" :disabled="disabled" @click="submit">
+        {{ disabled ? t('common.loading') : t('common.save') }}
       </button>
     </div>
   </div>

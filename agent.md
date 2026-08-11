@@ -80,6 +80,9 @@ Utiliser systématiquement ces termes dans toute la documentation :
 - **Calculs monétaires déterministes** : arrondis cohérents et centralisés
 - **Tests unitaires** ciblant surtout les règles de répartition
 - **Lisibilité > astuce technique**
+- **Aucun enregistrement orphelin** : tout ce qui est rattaché à une vacance est
+  supprimé en cascade avec elle (voir `specs/06-stockage-et-cascade.md`)
+- **État en mémoire mis à jour après confirmation de l'écriture** uniquement
 
 ## Convention de structure
 
@@ -93,6 +96,8 @@ src/
     settlement/    # Calculs de répartition
     storage/       # Persistance IndexedDB
     importExport/  # Import/export .divvy
+    shared/        # Helpers transverses (ids, horodatages)
+  stores/          # Stores Pinia
   ui/
     components/    # Composants Vue
     layouts/       # Layouts (AppShell, etc.)

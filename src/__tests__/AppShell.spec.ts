@@ -6,18 +6,7 @@ import AppShell from '@/ui/layouts/AppShell.vue'
 import { LOCALE_STORAGE_KEY } from '@/i18n'
 import { globalPlugins } from './helpers'
 
-vi.mock('@/domains/storage/db', () => ({
-  vacationStorage: {
-    getAll: vi.fn().mockResolvedValue([]),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
-  peopleStorage: {
-    getByVacationId: vi.fn().mockResolvedValue([]),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
-}))
+vi.mock('@/domains/storage/db', async () => (await import('./storageMock')).createStorageMock())
 
 describe('AppShell — language selector', () => {
   beforeEach(() => {

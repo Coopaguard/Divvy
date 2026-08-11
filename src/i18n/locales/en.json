@@ -9,7 +9,8 @@
     "people": "People",
     "expenses": "Expenses",
     "results": "Results",
-    "export": "Export .divvy"
+    "export": "Export .divvy",
+    "menu": "Menu"
   },
   "home": {
     "resume": "Resume",
@@ -28,7 +29,9 @@
       "startDateRequired": "Start date is required",
       "endDateRequired": "End date is required",
       "endBeforeStart": "End date must be after start date"
-    }
+    },
+    "delete": "Delete vacation",
+    "confirmDelete": "Delete this vacation? Everyone attached to it will be deleted too."
   },
   "people": {
     "title": "People",
@@ -83,7 +86,10 @@
     "loading": "Loading…",
     "error": {
       "import": "Error importing file",
-      "invalidData": "Invalid data"
+      "invalidData": "Invalid data",
+      "loadFailed": "Could not load the saved data",
+      "saveFailed": "Could not save the changes",
+      "deleteFailed": "Could not delete"
     }
   }
 }

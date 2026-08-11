@@ -3,20 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePeopleStore } from '@/stores/peopleStore'
 
-vi.mock('@/domains/storage/db', () => ({
-  vacationStorage: {
-    getAll: vi.fn().mockResolvedValue([]),
-    getById: vi.fn().mockResolvedValue(undefined),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
-  peopleStorage: {
-    getAll: vi.fn().mockResolvedValue([]),
-    getByVacationId: vi.fn().mockResolvedValue([]),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
-}))
+vi.mock('@/domains/storage/db', async () => (await import('./storageMock')).createStorageMock())
 
 const draft = {
   name: 'Alice',
@@ -41,15 +28,15 @@ describe('peopleStore', () => {
     const store = usePeopleStore()
     const person = await store.addPerson('vac-1', draft)
     expect(store.people).toHaveLength(1)
-    expect(person.name).toBe('Alice')
-    expect(person.vacationId).toBe('vac-1')
-    expect(typeof person.id).toBe('string')
+    expect(person?.name).toBe('Alice')
+    expect(person?.vacationId).toBe('vac-1')
+    expect(typeof person?.id).toBe('string')
   })
 
   it('updatePerson modifies existing person', async () => {
     const store = usePeopleStore()
     const person = await store.addPerson('vac-1', draft)
-    await store.updatePerson(person.id, { ...draft, name: 'Bob', shares: 2 })
+    await store.updatePerson(person!.id, { ...draft, name: 'Bob', shares: 2 })
     expect(store.people[0]?.name).toBe('Bob')
     expect(store.people[0]?.shares).toBe(2)
   })
@@ -57,14 +44,15 @@ describe('peopleStore', () => {
   it('updatePerson with unknown id does nothing', async () => {
     const store = usePeopleStore()
     await store.addPerson('vac-1', draft)
-    await store.updatePerson('nonexistent', { ...draft, name: 'Ghost' })
+    const updated = await store.updatePerson('nonexistent', { ...draft, name: 'Ghost' })
+    expect(updated).toBe(false)
     expect(store.people[0]?.name).toBe('Alice')
   })
 
   it('deletePerson removes person from list', async () => {
     const store = usePeopleStore()
     const person = await store.addPerson('vac-1', draft)
-    await store.deletePerson(person.id)
+    await store.deletePerson(person!.id)
     expect(store.people).toHaveLength(0)
   })
 
@@ -73,6 +61,41 @@ describe('peopleStore', () => {
     await store.addPerson('vac-1', draft)
     store.clear()
     expect(store.people).toHaveLength(0)
+  })
+
+  it('does not add the person when the write fails', async () => {
+    const { peopleStorage } = await import('@/domains/storage/db')
+    vi.mocked(peopleStorage.save).mockRejectedValueOnce(new Error('write failed'))
+
+    const store = usePeopleStore()
+    const person = await store.addPerson('vac-1', draft)
+
+    expect(person).toBeNull()
+    expect(store.people).toHaveLength(0)
+    expect(store.error).toBe('write failed')
+    expect(store.loading).toBe(false)
+  })
+
+  it('keeps the person in the list when the delete fails', async () => {
+    const { peopleStorage } = await import('@/domains/storage/db')
+    const store = usePeopleStore()
+    const person = await store.addPerson('vac-1', draft)
+    vi.mocked(peopleStorage.delete).mockRejectedValueOnce(new Error('delete failed'))
+
+    expect(await store.deletePerson(person!.id)).toBe(false)
+    expect(store.people).toHaveLength(1)
+    expect(store.error).toBe('delete failed')
+  })
+
+  it('leaves the list empty when loading fails', async () => {
+    const { peopleStorage } = await import('@/domains/storage/db')
+    vi.mocked(peopleStorage.getByVacationId).mockRejectedValueOnce(new Error('read failed'))
+
+    const store = usePeopleStore()
+    await store.loadByVacation('vac-1')
+
+    expect(store.people).toHaveLength(0)
+    expect(store.error).toBe('read failed')
   })
 
   it('loadByVacation populates people from storage', async () => {

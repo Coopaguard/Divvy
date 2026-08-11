@@ -4,24 +4,14 @@ import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import PersonForm from '@/ui/components/PersonForm.vue'
 import { globalPlugins } from './helpers'
+import type { Person } from '@/domains/people/types'
 
-vi.mock('@/domains/storage/db', () => ({
-  vacationStorage: {
-    getAll: vi.fn().mockResolvedValue([]),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
-  peopleStorage: {
-    getByVacationId: vi.fn().mockResolvedValue([]),
-    save: vi.fn().mockResolvedValue(undefined),
-    delete: vi.fn().mockResolvedValue(undefined),
-  },
-}))
+vi.mock('@/domains/storage/db', async () => (await import('./storageMock')).createStorageMock())
 
 describe('PersonForm', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  function mountForm(props: { person?: object | null } = {}) {
+  function mountForm(props: { person?: Person | null } = {}) {
     return mount(PersonForm, { props, global: globalPlugins() })
   }
 
@@ -72,7 +62,7 @@ describe('PersonForm', () => {
   })
 
   it('pre-fills fields when person prop is provided', () => {
-    const person = {
+    const person: Person = {
       id: 'p1',
       vacationId: 'v1',
       name: 'Charlie',

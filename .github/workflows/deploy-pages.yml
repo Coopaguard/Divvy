@@ -15,20 +15,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Gate: a merge on main is type-checked, linted and tested before anything is
+  # published. Reuses the CI workflow so the checks stay defined in one place.
+  verify:
+    name: Verify
+    uses: ./.github/workflows/ci.yml
+
   build:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Build
         run: npm run build

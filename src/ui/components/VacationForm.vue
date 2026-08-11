@@ -1,8 +1,9 @@
 <script setup lang="ts">
-// VacationForm — edit vacation title and dates
+// VacationForm — edit or delete the active vacation
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
+import ConfirmDialog from './ConfirmDialog.vue'
 import type { VacationDraft } from '@/domains/vacations/types'
 
 const { t } = useI18n()
@@ -12,6 +13,9 @@ const name = ref(vacationStore.vacation?.name ?? '')
 const startDate = ref(vacationStore.vacation?.startDate ?? '')
 const endDate = ref(vacationStore.vacation?.endDate ?? '')
 const saving = ref(false)
+const deleting = ref(false)
+const confirmingDelete = ref(false)
+const failure = ref<string | null>(null)
 const errors = ref<Record<string, string>>({})
 
 // Keep form in sync if store updates externally
@@ -40,17 +44,27 @@ function validate(): boolean {
 async function save(): Promise<void> {
   if (!validate()) return
   saving.value = true
+  failure.value = null
   const draft: VacationDraft = {
     name: name.value.trim(),
     startDate: startDate.value,
     endDate: endDate.value,
   }
-  if (vacationStore.vacation) {
-    await vacationStore.updateVacation(draft)
-  } else {
-    await vacationStore.createVacation(draft)
-  }
+  const saved = vacationStore.vacation
+    ? await vacationStore.updateVacation(draft)
+    : (await vacationStore.createVacation(draft)) !== null
+  if (!saved) failure.value = t('common.error.saveFailed')
   saving.value = false
+}
+
+/** Deletes the vacation and, in cascade, everything attached to it. */
+async function deleteVacation(): Promise<void> {
+  confirmingDelete.value = false
+  deleting.value = true
+  failure.value = null
+  const deleted = await vacationStore.deleteVacation()
+  if (!deleted) failure.value = t('common.error.deleteFailed')
+  deleting.value = false
 }
 </script>
 
@@ -94,12 +108,29 @@ async function save(): Promise<void> {
         </div>
       </div>
 
+      <p v-if="failure" class="form-failure" role="alert">{{ failure }}</p>
+
       <div class="form-actions">
-        <button type="submit" class="btn-primary" :disabled="saving">
+        <button
+          type="button"
+          class="btn-danger"
+          :disabled="saving || deleting"
+          @click="confirmingDelete = true"
+        >
+          {{ t('vacations.delete') }}
+        </button>
+        <button type="submit" class="btn-primary" :disabled="saving || deleting">
           {{ saving ? t('common.loading') : t('common.save') }}
         </button>
       </div>
     </form>
+
+    <ConfirmDialog
+      :open="confirmingDelete"
+      :message="t('vacations.confirmDelete')"
+      @confirm="deleteVacation"
+      @cancel="confirmingDelete = false"
+    />
   </section>
 </template>
 
@@ -143,9 +174,15 @@ async function save(): Promise<void> {
   color: #cf222e;
 }
 
+.form-failure {
+  font-size: var(--font-size-sm);
+  color: #cf222e;
+}
+
 .form-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm);
   padding-top: var(--space-xs);
 }
 
