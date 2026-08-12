@@ -157,5 +157,10 @@
       "exportFailed": "Impossible de rassembler les données à exporter",
       "shareFailed": "Le partage a échoué"
     }
+  },
+  "update": {
+    "available": "Une nouvelle version est disponible.",
+    "reload": "Recharger",
+    "later": "Plus tard"
   }
 }

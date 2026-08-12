@@ -165,7 +165,6 @@ Permettre l'import et l'export d'une session complète.
 
 ## Évolutions futures (hors MVP)
 
-- Mode PWA complet (installable, offline-first)
 - Synchronisation cloud optionnelle
 - Notifications de rappel
 - Partage de session entre utilisateurs

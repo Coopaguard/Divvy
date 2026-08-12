@@ -38,12 +38,8 @@ Le projet **Divvy** sera développé en :
 
 ## PWA
 
-Objectif : application **compatible PWA** (installable, offline-first) dans la suite du projet.
-
-Cela implique à terme :
-- manifeste web app,
-- service worker,
-- stratégie de cache.
+**Livré** — voir `09-pwa.md` : manifeste, service worker et précache sont en
+place, l'application s'installe et fonctionne hors ligne.
 
 ## Hors périmètre de cette étape
 
