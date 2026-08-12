@@ -1,6 +1,12 @@
 // Tests: settlement — shares, share-days, and transfer optimisation
 import { describe, it, expect } from 'vitest'
-import { computeBalances, daysPresent, optimiseTransfers } from '@/domains/settlement/settle'
+import {
+  computeBalances,
+  daysPresent,
+  optimiseTransfers,
+  personDayRate,
+  shareDayRate,
+} from '@/domains/settlement/settle'
 import type { Expense } from '@/domains/expenses/types'
 import type { Person } from '@/domains/people/types'
 import type { Vacation } from '@/domains/vacations/types'
@@ -86,17 +92,17 @@ describe('daysPresent', () => {
 })
 
 describe('computeBalances — shares', () => {
+  // No longer the default method — every case here asks for it by name.
+  const options = { method: 'shares' as const }
+
   it('splits evenly between equal shares', () => {
-    const balances = computeBalances([person('a'), person('b')], [expense('a', 1000)])
+    const balances = computeBalances([person('a'), person('b')], [expense('a', 1000)], options)
     expect(balances.map((balance) => balance.owedCents)).toEqual([500, 500])
     expect(balances.map((balance) => balance.balanceCents)).toEqual([500, -500])
   })
 
   it('weights by shares', () => {
-    const balances = computeBalances(
-      [person('a', 3), person('b', 1)],
-      [expense('a', 1000)],
-    )
+    const balances = computeBalances([person('a', 3), person('b', 1)], [expense('a', 1000)], options)
     expect(balances.map((balance) => balance.owedCents)).toEqual([750, 250])
   })
 
@@ -105,6 +111,7 @@ describe('computeBalances — shares', () => {
     const balances = computeBalances(
       [person('a'), person('b'), person('c')],
       [expense('a', 1000)],
+      options,
     )
     expect(balances.map((balance) => balance.owedCents)).toEqual([334, 333, 333])
     expect(sumOwed(balances)).toBe(1000)
@@ -114,13 +121,14 @@ describe('computeBalances — shares', () => {
     const balances = computeBalances(
       [person('a'), person('b'), person('c')],
       [expense('a', 1000), expense('b', 731)],
+      options,
     )
     expect(sumBalance(balances)).toBe(0)
   })
 
   it('ignores dates entirely', () => {
     const brief = person('b', 1, '2025-07-09', '2025-07-10')
-    const balances = computeBalances([person('a'), brief], [expense('a', 1000)])
+    const balances = computeBalances([person('a'), brief], [expense('a', 1000)], options)
     // Two days or ten, the share is the same under this method.
     expect(balances.map((balance) => balance.owedCents)).toEqual([500, 500])
   })
@@ -128,18 +136,19 @@ describe('computeBalances — shares', () => {
   it('still reports the days, for information', () => {
     const brief = person('b', 1, '2025-07-09', '2025-07-10')
     const balances = computeBalances([person('a'), brief], [expense('a', 1000)], {
+      ...options,
       vacation,
     })
     expect(balances.map((balance) => balance.days)).toEqual([10, 2])
   })
 
   it('gives everyone a zero balance when nothing was spent', () => {
-    const balances = computeBalances([person('a'), person('b')], [])
+    const balances = computeBalances([person('a'), person('b')], [], options)
     expect(balances.map((balance) => balance.balanceCents)).toEqual([0, 0])
   })
 
   it('handles an empty group', () => {
-    expect(computeBalances([], [expense('a', 1000)])).toEqual([])
+    expect(computeBalances([], [expense('a', 1000)], options)).toEqual([])
   })
 })
 
@@ -308,6 +317,100 @@ describe('computeBalances — presence', () => {
     const balances = computeBalances([a, away], [expense('a', 1000, '2025-07-03')], options)
     expect(balances[1]!.owedCents).toBe(0)
     expect(balances[1]!.balanceCents).toBe(0)
+  })
+})
+
+describe('shareDayRate', () => {
+  const options = { method: 'shareDays' as const, vacation }
+
+  it('gives what one share costs for one day', () => {
+    // A : 1 part × 10 jours ; B : 1 part × 5 jours → 15 jours-parts, 30 € au
+    // total, donc 2 € le jour-part.
+    const a = person('a', 1, '2025-07-01', '2025-07-10')
+    const b = person('b', 1, '2025-07-06', '2025-07-10')
+    const balances = computeBalances([a, b], [expense('a', 3000)], options)
+
+    expect(shareDayRate(balances, 3000)).toEqual({ units: 15, rateCents: 200 })
+  })
+
+  it('counts shares as well as days', () => {
+    const a = person('a', 2, '2025-07-01', '2025-07-10') // 20
+    const b = person('b', 1, '2025-07-06', '2025-07-10') //  5
+    const balances = computeBalances([a, b], [expense('a', 2500)], options)
+
+    expect(shareDayRate(balances, 2500)?.units).toBe(25)
+  })
+
+  it('keeps the fraction rather than rounding it away', () => {
+    // 480 € sur 35 jours-parts ne tombe pas juste : la cote est indicative, et
+    // l'arrondir ici ferait croire à une incohérence avec les quote-parts.
+    const a = person('a', 1, '2025-07-01', '2025-07-10') // 10
+    const b = person('b', 1, '2025-07-01', '2025-07-05') //  5
+    const c = person('c', 2, '2025-07-01', '2025-07-10') // 20
+    const balances = computeBalances([a, b, c], [expense('a', 48000)], options)
+
+    const rate = shareDayRate(balances, 48000)!
+    expect(rate.units).toBe(35)
+    expect(rate.rateCents).toBeCloseTo(48000 / 35, 6)
+    expect(Number.isInteger(rate.rateCents)).toBe(false)
+  })
+
+  it('has no rate to give when nobody has a usable day', () => {
+    const away = person('a', 1, '2025-01-01', '2025-01-02')
+    const balances = computeBalances([away], [expense('a', 1000)], options)
+    expect(shareDayRate(balances, 1000)).toBeNull()
+  })
+
+  it('has no rate to give for an empty group', () => {
+    expect(shareDayRate([], 1000)).toBeNull()
+  })
+
+  it('is zero when nothing was spent', () => {
+    const balances = computeBalances([person('a')], [], options)
+    expect(shareDayRate(balances, 0)?.rateCents).toBe(0)
+  })
+})
+
+describe('personDayRate', () => {
+  const options = { method: 'presence' as const, vacation }
+
+  it('gives each person the rate their own days worked out to', () => {
+    // A reste les deux jours, B repart le premier soir. La dépense du 1er est
+    // partagée (5 € chacun), celle du 2 revient entière à A.
+    const a = person('a', 1, '2025-07-01', '2025-07-02')
+    const b = person('b', 1, '2025-07-01', '2025-07-01')
+    const expenses = [expense('a', 1000, '2025-07-01'), expense('a', 1000, '2025-07-02')]
+    const [rateA, rateB] = computeBalances([a, b], expenses, options).map(personDayRate)
+
+    expect(rateA).toBe(750) // 15 € sur 2 jours-parts
+    expect(rateB).toBe(500) //  5 € sur 1
+  })
+
+  it('divides by shares as well as days', () => {
+    const a = person('a', 2, '2025-07-01', '2025-07-05')
+    const balances = computeBalances([a], [expense('a', 1000)], options)
+
+    // 10 € pour 2 parts × 5 jours : le jour-part vaut 1 €, pas 2.
+    expect(personDayRate(balances[0]!)).toBe(100)
+  })
+
+  it('keeps the fraction rather than rounding it away', () => {
+    const a = person('a', 1, '2025-07-01', '2025-07-03')
+    const balances = computeBalances([a], [expense('a', 1000)], options)
+
+    expect(personDayRate(balances[0]!)).toBeCloseTo(1000 / 3, 6)
+  })
+
+  it('has no rate for someone with no day inside the vacation', () => {
+    const away = person('a', 1, '2025-01-01', '2025-01-02')
+    const balances = computeBalances([away], [expense('a', 1000)], options)
+
+    expect(personDayRate(balances[0]!)).toBeNull()
+  })
+
+  it('has no rate for someone holding no share', () => {
+    const balances = computeBalances([person('a', 0)], [expense('a', 1000)], options)
+    expect(personDayRate(balances[0]!)).toBeNull()
   })
 })
 

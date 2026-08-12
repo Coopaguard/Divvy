@@ -18,7 +18,12 @@ export type SplitMethod =
 /** Every method, in the order they are offered — simplest first. */
 export const SPLIT_METHODS: readonly SplitMethod[] = ['shares', 'shareDays', 'presence']
 
-export const DEFAULT_SPLIT_METHOD: SplitMethod = 'shares'
+/**
+ * `presence` par défaut : c'est le calcul le plus fidèle aux faits — personne ne
+ * porte une dépense faite après son départ. Les deux autres restent offertes,
+ * mais il faut les vouloir : elles simplifient au prix d'une approximation.
+ */
+export const DEFAULT_SPLIT_METHOD: SplitMethod = 'presence'
 
 /** What one person owes, what they advanced, and the gap between the two. */
 export interface Balance {

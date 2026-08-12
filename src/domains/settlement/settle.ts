@@ -158,6 +158,42 @@ export function computeBalances(
 }
 
 /**
+ * Ce que vaut **une part pour une journée**, sous la méthode `shareDays` : le
+ * total divisé par la somme des jours-parts.
+ *
+ * Le résultat n'est pas un nombre entier de centimes, et ne peut pas l'être —
+ * 480 € sur 35 jours-parts font 13,714… Cette cote est donc **indicative** :
+ * les quote-parts sont calculées sur le total, pas en multipliant cette valeur,
+ * sans quoi les arrondis ne boucleraient plus. L'appelant l'affiche comme telle.
+ *
+ * Null quand aucun jour-part n'est en jeu — il n'y a alors pas de cote à donner.
+ */
+export function shareDayRate(
+  balances: readonly Balance[],
+  totalCents: number,
+): { units: number; rateCents: number } | null {
+  const units = balances.reduce((sum, balance) => sum + balance.shares * balance.days, 0)
+  if (units <= 0) return null
+  return { units, rateCents: totalCents / units }
+}
+
+/**
+ * Ce qu'une part a coûté par jour **à cette personne-là**.
+ *
+ * Sous `presence`, il n'y a pas de cote unique : chacun ne porte que les
+ * dépenses des jours où il était là. Deux personnes aux mêmes parts n'ont donc
+ * pas le même prix au jour-part — celui qui n'a vu que les grosses journées
+ * paie plus cher la sienne. C'est précisément ce que cette valeur montre.
+ *
+ * Indicative comme la précédente, et null quand la personne n'a aucun jour-part.
+ */
+export function personDayRate(balance: Balance): number | null {
+  const units = balance.shares * balance.days
+  if (units <= 0) return null
+  return balance.owedCents / units
+}
+
+/**
  * Qui rembourse qui, en **aussi peu de virements que possible**.
  *
  * À chaque tour, le plus gros débiteur paie le plus gros créancier : l'un des

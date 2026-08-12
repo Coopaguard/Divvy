@@ -46,6 +46,58 @@ Conséquence à connaître : en mode `prompt`, le service worker **ne prend pas 
 contrôle au premier chargement**. Il s'installe, et ne pilote la page qu'à la
 visite suivante. Ce n'est pas un défaut, c'est le cycle de vie normal.
 
+## Proposer l'installation
+
+Rien dans une page web ne dit qu'elle peut s'installer. Le navigateur a bien son
+propre bouton, mais il est enfoui dans un menu que personne n'ouvre. `InstallPrompt`
+le dit donc lui-même, dans une bannière — sous trois conditions strictes.
+
+### Ne rien proposer à qui l'a déjà fait
+
+`isInstalled()` (`domains/pwa/install.ts`) lit **quatre** signaux, parce qu'aucun ne
+couvre tout le parc :
+
+| Signal | Terrain |
+| --- | --- |
+| `display-mode: standalone` / `fullscreen` | le cas courant |
+| `display-mode: window-controls-overlay` | bureau |
+| `navigator.standalone` | Safari iOS, qui n'a que celui-là |
+| référent `android-app://` | une application Android qui nous embarque |
+
+### Attendre que le navigateur le dise
+
+L'événement `beforeinstallprompt` n'est émis que si le navigateur juge
+l'application installable. On l'intercepte (`preventDefault`) pour garder la main
+sur le moment et la place : sans cela, il affiche sa propre bannière par-dessus le
+contenu, au moment qui l'arrange.
+
+L'invite ne se rouvre pas : `prompt()` ne sert qu'une fois. Le navigateur en émettra
+une nouvelle s'il le juge bon — nous ne décidons pas de cela.
+
+**Safari iOS n'émet jamais cet événement** et n'expose aucune API : l'installation y
+passe forcément par le menu de partage, à la main. On ne peut donc qu'expliquer le
+geste, sans bouton — il n'y aurait rien derrière. D'où `isIos()`, qui doit aussi
+reconnaître l'iPad récent : il se présente comme un Mac, et seul l'écran tactile
+(`maxTouchPoints > 1`) le trahit.
+
+### Se taire quand on a dit non
+
+Une bannière qui revient à chaque visite est une nuisance. « Plus tard » — comme un
+refus dans l'invite native — enregistre la date et fait taire la proposition **un
+mois**. Assez long pour ne pas harceler, assez court pour laisser une seconde chance
+à qui a fermé la bannière sans la lire. L'installation faite, le report est effacé.
+
+Un stockage indisponible (mode privé, quota plein) vaut report : dans le doute, on
+se tait plutôt que d'insister.
+
+### Empilement
+
+Bannière d'installation et bandeau de mise à jour peuvent coexister — application
+non installée, nouvelle version prête. Le placement à l'écran appartient donc à une
+pile unique dans `AppShell` (`.app-prompts`), et non à chaque bannière : deux
+éléments fixés chacun de son côté se recouvriraient. La pile laisse passer les clics
+(`pointer-events: none`), chaque bannière les reprend pour elle.
+
 ## Vérifications
 
 Testé dans Chromium sur le build de production servi sous `/Divvy/` :
@@ -58,6 +110,15 @@ Testé dans Chromium sur le build de production servi sous `/Divvy/` :
 - **cycle de mise à jour** : une seconde version déployée pendant que la page est
   ouverte déclenche le bandeau, la page reste sur l'ancienne version tant que
   l'utilisateur n'a pas cliqué, puis bascule sur la nouvelle.
+- **proposition d'installation** : absente tant que le navigateur n'a rien signalé,
+  affichée dès l'événement, `prompt()` bien ouvert au clic ; « plus tard » la fait
+  disparaître et elle ne revient pas au rechargement suivant ; rien du tout en mode
+  `standalone` ; sur iPhone, la consigne du geste et aucun bouton ; les deux
+  bannières côte à côte s'empilent sans se recouvrir et tiennent dans l'écran.
+
+Chromium sans en-tête n'émet pas `beforeinstallprompt` : l'événement est fabriqué
+dans la page pour la vérification. C'est la réaction de l'interface qui est testée,
+pas le critère d'installabilité du navigateur.
 
 ## Hors périmètre
 

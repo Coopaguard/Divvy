@@ -135,7 +135,12 @@
       "shares": "Le total des dépenses est divisé par le nombre total de parts, puis multiplié par les parts de chacun. Les dates ne comptent pas : quelqu'un présent deux jours paie autant qu'une personne restée tout le séjour, à parts égales. Pour tenir compte d'une présence plus courte, réduisez ses parts. Exemple : 300 € pour 6 parts font 50 € la part ; une personne à 2 parts doit donc 100 €.",
       "shareDays": "Chaque personne pèse ses parts multipliées par ses jours de présence. Le total est divisé par la somme de ces jours-parts, ce qui donne le prix d'une part pour une journée. Les dépenses sont ainsi étalées uniformément sur le séjour : quelqu'un reparti tôt porte encore une fraction de ce qui a été dépensé après son départ. Exemple : 10 jours pour l'un, 5 pour l'autre, soit 15 jours-parts ; 300 € font 20 € le jour-part.",
       "presence": "Chaque dépense est traitée séparément, à sa propre date. Seules les personnes présentes ce jour-là se la partagent, au prorata de leurs parts ; les autres n'en portent rien. Un séjour couvre ses deux bornes : le jour du départ compte encore, le lendemain non. C'est le calcul le plus fidèle aux faits, mais il suppose des dates de dépense exactes. Exemple : quelqu'un reparti le 2 paie la moitié des courses du 2, et rien du restaurant du 8."
-    }
+    },
+    "rateTitle": "Coût d’une part par jour",
+    "rateUnits": "1 jour-part au total | {count} jours-parts au total",
+    "rateRounded": "Valeur arrondie : les quote-parts sont calculées sur le total, pas en multipliant cette cote.",
+    "dayRate": "Coût jour-part",
+    "dayRateNote": "Coût jour-part : ce qu’une part a coûté par jour à chacun. Il varie d’une personne à l’autre, puisqu’il dépend des dépenses faites pendant sa présence. Valeur arrondie et indicative."
   },
   "currencies": {
     "XXX": "Générique (aucun pays)",
@@ -161,6 +166,13 @@
   "update": {
     "available": "Une nouvelle version est disponible.",
     "reload": "Recharger",
+    "later": "Plus tard"
+  },
+  "install": {
+    "title": "Installer Divvy",
+    "why": "Depuis l’écran d’accueil, et même hors ligne.",
+    "iosHint": "Touchez Partager, puis « Sur l’écran d’accueil ».",
+    "action": "Installer",
     "later": "Plus tard"
   }
 }

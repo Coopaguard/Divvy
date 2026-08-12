@@ -9,8 +9,13 @@ import { useI18n } from 'vue-i18n'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { useVacationStore } from '@/stores/vacationStore'
-import { computeBalances, optimiseTransfers } from '@/domains/settlement/settle'
-import { SPLIT_METHODS, type SplitMethod } from '@/domains/settlement/types'
+import {
+  computeBalances,
+  optimiseTransfers,
+  personDayRate,
+  shareDayRate,
+} from '@/domains/settlement/settle'
+import { SPLIT_METHODS, type Balance, type SplitMethod } from '@/domains/settlement/types'
 import { formatCents } from '@/domains/shared/money'
 import { useCurrency } from '@/ui/composables/useCurrency'
 
@@ -40,6 +45,28 @@ const methodHint = computed(() => t(`settlement.methodHints.${vacationStore.spli
 
 /** Days only weigh under the day-based methods; showing them otherwise misleads. */
 const showsDays = computed(() => vacationStore.splitMethod !== 'shares')
+
+/**
+ * Ce que vaut une part pour une journée. Ce prix n'existe que sous la méthode
+ * par jour : la simple ignore les dates, et celle par dépense n'a pas de cote
+ * unique — chaque dépense a la sienne.
+ */
+const rate = computed(() =>
+  vacationStore.splitMethod === 'shareDays'
+    ? shareDayRate(balances.value, totalCents.value)
+    : null,
+)
+
+/**
+ * Sous `presence`, la cote se lit personne par personne : elle dépend des jours
+ * où chacun était là. Une colonne du tableau plutôt qu'un chiffre unique.
+ */
+const showsPersonRate = computed(() => vacationStore.splitMethod === 'presence')
+
+function dayRate(balance: Balance): string {
+  const cents = personDayRate(balance)
+  return cents === null ? '—' : amount(cents)
+}
 
 const balances = computed(() =>
   computeBalances(peopleStore.people, expenseStore.expenses, {
@@ -103,6 +130,17 @@ function personName(id: string): string {
 
       <p v-if="failure" class="form-failure" role="alert">{{ failure }}</p>
 
+      <div v-if="rate" class="rate">
+        <div class="rate-head">
+          <span class="rate-title">{{ t('settlement.rateTitle') }}</span>
+          <span class="rate-value">{{ amount(rate.rateCents) }}</span>
+        </div>
+        <span class="rate-units">{{ t('settlement.rateUnits', rate.units) }}</span>
+        <!-- Le total ne se divise presque jamais en un compte rond de centimes :
+             on le dit, plutôt que de laisser croire à une incohérence. -->
+        <span class="rate-note">{{ t('settlement.rateRounded') }}</span>
+      </div>
+
       <h3 class="subsection-title">{{ t('settlement.sharesTitle') }}</h3>
       <div class="table-scroll">
         <table class="settlement-table">
@@ -114,6 +152,9 @@ function personName(id: string): string {
               <th class="numeric">{{ t('settlement.owed') }}</th>
               <th class="numeric">{{ t('results.paid') }}</th>
               <th class="numeric">{{ t('settlement.balance') }}</th>
+              <!-- Last on purpose: on a phone the table scrolls, and what
+                   scrolls out of sight must be the aside, not the balance. -->
+              <th v-if="showsPersonRate" class="numeric">{{ t('settlement.dayRate') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -132,6 +173,7 @@ function personName(id: string): string {
               >
                 {{ amount(balance.balanceCents) }}
               </td>
+              <td v-if="showsPersonRate" class="numeric rate-cell">{{ dayRate(balance) }}</td>
             </tr>
           </tbody>
           <tfoot>
@@ -140,10 +182,15 @@ function personName(id: string): string {
               <td class="numeric total">{{ amount(totalCents) }}</td>
               <td class="numeric total">{{ amount(totalCents) }}</td>
               <td />
+              <td v-if="showsPersonRate" />
             </tr>
           </tfoot>
         </table>
       </div>
+
+      <!-- Une cote par personne surprend si l'on n'a pas en tête qu'elle
+           dépend des jours vécus : on le dit sous le tableau. -->
+      <p v-if="showsPersonRate" class="rate-note table-note">{{ t('settlement.dayRateNote') }}</p>
 
       <h3 class="subsection-title">{{ t('settlement.transfersTitle') }}</h3>
 
@@ -244,9 +291,75 @@ function personName(id: string): string {
   margin-top: var(--space-sm);
 }
 
-/* Wide tables scroll inside their own box rather than the page. */
+.rate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.rate-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.rate-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.rate-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rate-units {
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+}
+
+.rate-note {
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.table-note {
+  margin-top: var(--space-sm);
+}
+
+/* The rate is an aside, not a figure to add up: it stays lighter than the
+   money columns so the eye keeps going to the share owed. */
+.rate-cell {
+  color: var(--muted);
+}
+
+/* Wide tables scroll inside their own box rather than the page.
+   On a phone the table cuts cleanly at a column edge, which reads as the end
+   of the data rather than as more to come. The pair of shadows below say
+   otherwise: the `local` gradients scroll with the content and cover the
+   `scroll` ones at each end, so a shadow shows only on a side that has
+   something left to reveal — and none at all when the table already fits. */
 .table-scroll {
   overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--surface) 40%, transparent) left center / 2rem 100% no-repeat
+      local,
+    linear-gradient(to left, var(--surface) 40%, transparent) right center / 2rem 100% no-repeat
+      local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 12%), transparent) left center / 0.6rem 100%
+      no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 12%), transparent) right center /
+      0.6rem 100% no-repeat scroll;
 }
 
 .settlement-table {

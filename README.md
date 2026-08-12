@@ -21,9 +21,13 @@ qui suit est rattaché à celle-là.
 
 Également :
 
-- **Trois méthodes de répartition** au choix — simple (total ÷ parts), au prorata
-  des jours (total ÷ parts ÷ jours), ou dépense par dépense selon les présents à sa
-  date. La méthode est enregistrée sur la vacance.
+- **Trois méthodes de répartition** au choix — dépense par dépense selon les présents
+  à sa date (par défaut, la plus fidèle aux faits), au prorata des jours
+  (total ÷ parts ÷ jours), ou simple (total ÷ parts). La méthode est enregistrée sur
+  la vacance.
+- **Coût d'une part par jour**, affiché à titre indicatif : une valeur unique au
+  prorata des jours, une par personne dépense par dépense — puisqu'elle dépend alors
+  des journées vécues par chacun.
 - **Virements optimisés** : le moins de paiements possible, et le moins
   d'interlocuteurs possible pour chacun.
 - **Devise au choix** (générique, €, £, $, CHF), indépendante de la langue.
@@ -32,8 +36,9 @@ qui suit est rattaché à celle-là.
   la feuille d'envoi du téléphone, ou en réimporter une. Un import n'écrase jamais
   ce qui est déjà là — voir `specs/08-import-export.md`.
 - **Installable et hors ligne** : l'application s'installe sur téléphone et
-  fonctionne sans réseau. Une nouvelle version est *proposée*, jamais imposée —
-  voir `specs/09-pwa.md`.
+  fonctionne sans réseau. Ouverte dans un onglet, elle propose elle-même de
+  s'installer — une fois, puis elle se tait un mois si l'on décline. Une nouvelle
+  version est *proposée*, jamais imposée — voir `specs/09-pwa.md`.
 - Reprise depuis le stockage local : les vacances enregistrées sont retrouvées au
   démarrage. La *sélection*, elle, est volontairement remise à zéro — on rechoisit
   la vacance à éditer à chaque ouverture.
