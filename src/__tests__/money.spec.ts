@@ -119,7 +119,7 @@ describe('formatCents — currency', () => {
     expect(digits(formatCents(60000, 'en', 'GBP'))).toBe(digits(formatCents(60000, 'en', 'EUR')))
   })
 
-  it('falls back to the default currency when none is given', () => {
-    expect(norm(formatCents(60000, 'fr'))).toBe('600,00 €')
+  it('falls back to the generic sign when no currency is given', () => {
+    expect(norm(formatCents(60000, 'fr'))).toBe('600,00 ¤')
   })
 })

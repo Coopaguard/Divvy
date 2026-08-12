@@ -29,8 +29,12 @@ export const GENERIC_SIGN = '¤'
 /** Reference currency used only to learn where a locale puts its symbol. */
 export const PLACEMENT_REFERENCE = 'EUR'
 
-/** What the app displayed before the setting existed — kept as the default. */
-export const FALLBACK_CURRENCY: SupportedCurrency = 'EUR'
+/**
+ * Le signe générique par défaut : tant que l'utilisateur n'a rien choisi,
+ * l'application ne présume d'aucun pays. Les montants restent lisibles, sans
+ * qu'un symbole national leur prête une devise qu'ils n'ont pas.
+ */
+export const FALLBACK_CURRENCY: SupportedCurrency = 'XXX'
 
 export function isSupportedCurrency(value: unknown): value is SupportedCurrency {
   return typeof value === 'string' && (supportedCurrencies as readonly string[]).includes(value)

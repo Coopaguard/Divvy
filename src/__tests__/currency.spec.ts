@@ -34,7 +34,8 @@ describe('currency', () => {
     expect(isSupportedCurrency(null)).toBe(false)
   })
 
-  it('starts on the currency the app used before the setting existed', () => {
+  it('starts on the generic sign, presuming no country', () => {
+    expect(FALLBACK_CURRENCY).toBe('XXX')
     expect(resolveInitialCurrency()).toBe(FALLBACK_CURRENCY)
   })
 
