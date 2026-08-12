@@ -36,6 +36,15 @@ export function createStorageMock() {
       delete: vi.fn<(id: string) => Promise<void>>().mockResolvedValue(undefined),
     },
     deletePersonCascade: vi.fn<(id: string) => Promise<number>>().mockResolvedValue(0),
+    saveVacationBundle: vi
+      .fn<
+        (
+          vacation: Vacation,
+          people: readonly Person[],
+          expenses: readonly Expense[],
+        ) => Promise<void>
+      >()
+      .mockResolvedValue(undefined),
     pruneOrphanRecords: vi
       .fn<() => Promise<CascadeReport>>()
       .mockResolvedValue(EMPTY_CASCADE_REPORT),

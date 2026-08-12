@@ -5,25 +5,41 @@ import { setActivePinia, createPinia } from 'pinia'
 import RowActions from '@/ui/components/RowActions.vue'
 import { globalPlugins } from './helpers'
 
+const ACTIONS = [
+  { key: 'edit', label: 'Edit' },
+  { key: 'export', label: 'Export' },
+  { key: 'delete', label: 'Delete', danger: true },
+]
+
 describe('RowActions', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     document.body.innerHTML = ''
   })
 
-  function mountActions() {
-    return mount(RowActions, { global: globalPlugins(), attachTo: document.body })
+  function mountActions(actions = ACTIONS) {
+    return mount(RowActions, {
+      props: { actions, label: 'Actions' },
+      global: globalPlugins(),
+      attachTo: document.body,
+    })
   }
 
-  it('renders both actions in the open, for wide screens', () => {
+  it('renders every action in the open, for wide screens', () => {
+    const labels = mountActions()
+      .findAll('.inline-actions button')
+      .map((button) => button.text())
+    expect(labels).toEqual(['Edit', 'Export', 'Delete'])
+  })
+
+  it('marks a destructive action apart', () => {
     const wrapper = mountActions()
-    expect(wrapper.find('.inline-actions .btn-secondary').exists()).toBe(true)
-    expect(wrapper.find('.inline-actions .btn-danger').exists()).toBe(true)
+    const destructive = wrapper.findAll('.inline-actions button').filter((b) => b.text() === 'Delete')
+    expect(destructive[0]!.classes()).toContain('btn-danger')
   })
 
   it('renders a "…" trigger for phones', () => {
-    const wrapper = mountActions()
-    const trigger = wrapper.find('.menu-trigger')
+    const trigger = mountActions().find('.menu-trigger')
     expect(trigger.exists()).toBe(true)
     expect(trigger.text()).toBe('…')
   })
@@ -32,40 +48,34 @@ describe('RowActions', () => {
     expect(mountActions().find('.menu').exists()).toBe(false)
   })
 
-  it('opens the menu with both actions', async () => {
+  it('opens the menu with the same actions', async () => {
     const wrapper = mountActions()
     await wrapper.find('.menu-trigger').trigger('click')
-    expect(wrapper.findAll('.menu-item')).toHaveLength(2)
+    expect(wrapper.findAll('.menu-item').map((item) => item.text())).toEqual([
+      'Edit',
+      'Export',
+      'Delete',
+    ])
   })
 
-  it('emits edit from the inline button', async () => {
+  it('emits the key of an inline action', async () => {
     const wrapper = mountActions()
-    await wrapper.find('.inline-actions .btn-secondary').trigger('click')
-    expect(wrapper.emitted('edit')).toHaveLength(1)
+    await wrapper.findAll('.inline-actions button')[1]!.trigger('click')
+    expect(wrapper.emitted('select')).toEqual([['export']])
   })
 
-  it('emits delete from the inline button', async () => {
-    const wrapper = mountActions()
-    await wrapper.find('.inline-actions .btn-danger').trigger('click')
-    expect(wrapper.emitted('delete')).toHaveLength(1)
-  })
-
-  it('emits edit from the menu, and closes it', async () => {
+  it('emits the key from the menu, and closes it', async () => {
     const wrapper = mountActions()
     await wrapper.find('.menu-trigger').trigger('click')
-    await wrapper.findAll('.menu-item')[0]!.trigger('click')
+    await wrapper.findAll('.menu-item')[2]!.trigger('click')
 
-    expect(wrapper.emitted('edit')).toHaveLength(1)
+    expect(wrapper.emitted('select')).toEqual([['delete']])
     expect(wrapper.find('.menu').exists()).toBe(false)
   })
 
-  it('emits delete from the menu, and closes it', async () => {
-    const wrapper = mountActions()
-    await wrapper.find('.menu-trigger').trigger('click')
-    await wrapper.findAll('.menu-item')[1]!.trigger('click')
-
-    expect(wrapper.emitted('delete')).toHaveLength(1)
-    expect(wrapper.find('.menu').exists()).toBe(false)
+  it('adapts to a shorter action list', () => {
+    const wrapper = mountActions([{ key: 'only', label: 'Only' }])
+    expect(wrapper.findAll('.inline-actions button')).toHaveLength(1)
   })
 
   it('closes on a click outside without acting', async () => {
@@ -76,8 +86,7 @@ describe('RowActions', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('.menu').exists()).toBe(false)
-    expect(wrapper.emitted('edit')).toBeUndefined()
-    expect(wrapper.emitted('delete')).toBeUndefined()
+    expect(wrapper.emitted('select')).toBeUndefined()
     wrapper.unmount()
   })
 

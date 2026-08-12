@@ -152,13 +152,14 @@ Permettre l'import et l'export d'une session complète.
 - Gestion des erreurs (fichier invalide, version incompatible)
 
 ### Livrables
-- Domaine métier : `importExport/`
-- Composants `ExportButton`, `ImportButton`
-- Schéma de validation du format `.divvy`
+- Domaine métier : `importExport/` (`format.ts`, `file.ts`)
+- Actions Exporter / Partager sur chaque vacance, Importer dans l'étape Vacances
+- Schéma de validation du format `.divvy` (voir `specs/08-import-export.md`)
 
 ### Critères de validation
 - Export/import sans perte de données
 - Gestion d'erreur robuste (fichier corrompu, mauvaise version)
+- Un import n'écrase jamais une vacance existante
 
 ---
 

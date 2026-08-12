@@ -76,6 +76,9 @@ const steps = computed(() =>
 
 <style scoped>
 .timeline {
+  /* Single source of truth: the connector is positioned from this, so the line
+     and the circle it touches cannot drift apart. */
+  --marker-size: 1.8rem;
   width: 100%;
   overflow-x: auto;
   /* Flex items refuse to shrink below their content unless told to. Without
@@ -99,13 +102,15 @@ const steps = computed(() =>
   justify-content: center;
 }
 
-/* Connector between markers, drawn behind them. Coloured once walked past. */
+/* Connector between two markers: it spans the gap only, from the edge of the
+   previous circle to the edge of this one, and never runs underneath them. */
 .timeline-step::before {
   content: '';
   position: absolute;
-  top: 0.9rem;
-  right: 50%;
-  left: -50%;
+  /* Centred on the markers: half the circle, less half the line. */
+  top: calc(var(--marker-size) / 2 - 1px);
+  right: calc(50% + var(--marker-size) / 2);
+  left: calc(-50% + var(--marker-size) / 2);
   height: 2px;
   background: var(--border);
 }
@@ -143,14 +148,15 @@ const steps = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: var(--marker-size);
+  height: var(--marker-size);
   border-radius: 50%;
   border: 2px solid var(--step-color);
   background: var(--bg-page);
   color: var(--text);
   font-weight: 600;
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  /* Border width is not animated: growing it would nudge the figure inside. */
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .current-label {
@@ -183,13 +189,14 @@ const steps = computed(() =>
 
 /* Walked past: filled with a tint light enough to keep the figure readable. */
 .timeline-step.done .step-marker {
-  background: color-mix(in srgb, var(--step-color) 18%, var(--bg-page));
+  background: color-mix(in srgb, var(--step-color) 14%, var(--bg-page));
 }
 
-/* Current: the same tint plus a ring, so position never rests on hue alone. */
+/* Current: a thicker ring and a deeper fill, both kept inside the circle —
+   nothing bleeds past its edge. Position never rests on hue alone. */
 .timeline-step.current .step-marker {
-  background: color-mix(in srgb, var(--step-color) 22%, var(--bg-page));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--step-color) 22%, var(--bg-page));
+  border-width: 3px;
+  background: color-mix(in srgb, var(--step-color) 26%, var(--bg-page));
 }
 
 .timeline-step.current .step-label {
@@ -224,6 +231,10 @@ const steps = computed(() =>
 }
 
 @media (min-width: 768px) {
+  .timeline {
+    --marker-size: 2.1rem;
+  }
+
   /* Room enough for every name: the caption becomes redundant. */
   .current-label {
     display: none;
@@ -241,13 +252,5 @@ const steps = computed(() =>
     font-size: var(--font-size-sm);
   }
 
-  .step-marker {
-    width: 2.1rem;
-    height: 2.1rem;
-  }
-
-  .timeline-step::before {
-    top: 1.05rem;
-  }
 }
 </style>

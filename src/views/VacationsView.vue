@@ -8,6 +8,11 @@ import { useI18n } from 'vue-i18n'
 import { useVacationStore } from '@/stores/vacationStore'
 import VacationForm from '@/ui/components/VacationForm.vue'
 import ConfirmDialog from '@/ui/components/ConfirmDialog.vue'
+import RowActions from '@/ui/components/RowActions.vue'
+import type { RowAction } from '@/ui/components/RowActions.vue'
+import { bundleFileName, parseDivvyFile, type ParseFailure } from '@/domains/importExport/format'
+import { serialiseBundle } from '@/domains/importExport/format'
+import { canShareFiles, downloadFile, readFileText, shareFile } from '@/domains/importExport/file'
 import type { Vacation, VacationDraft } from '@/domains/vacations/types'
 
 const { t, locale } = useI18n()
@@ -21,6 +26,83 @@ const creating = ref(false)
 const failure = ref<string | null>(null)
 const errors = ref<Record<string, string>>({})
 const pendingDelete = ref<Vacation | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+const busy = ref(false)
+
+// Le partage natif n'existe pas partout : plutôt qu'un bouton qui échoue, on ne
+// le propose que là où il fonctionnera.
+const sharingAvailable = canShareFiles()
+
+const rowActions = computed<RowAction[]>(() => [
+  { key: 'export', label: t('transfer.export') },
+  ...(sharingAvailable ? [{ key: 'share', label: t('transfer.share') }] : []),
+  { key: 'delete', label: t('common.delete'), danger: true },
+])
+
+async function onRowAction(key: string, vacation: Vacation): Promise<void> {
+  if (key === 'delete') {
+    pendingDelete.value = vacation
+    return
+  }
+
+  failure.value = null
+  busy.value = true
+  const bundle = await vacationStore.collectBundle(vacation.id)
+  busy.value = false
+  if (!bundle) {
+    failure.value = t('transfer.errors.exportFailed')
+    return
+  }
+
+  const fileName = bundleFileName(vacation)
+  const contents = serialiseBundle(bundle)
+
+  if (key === 'export') {
+    downloadFile(fileName, contents)
+    return
+  }
+
+  const outcome = await shareFile(fileName, contents)
+  // Refermer la feuille de partage n'est pas un échec à signaler.
+  if (outcome === 'failed') failure.value = t('transfer.errors.shareFailed')
+}
+
+const importErrors: Record<ParseFailure, string> = {
+  notJson: 'transfer.errors.notDivvy',
+  notDivvy: 'transfer.errors.notDivvy',
+  unsupportedVersion: 'transfer.errors.unsupportedVersion',
+  invalidData: 'transfer.errors.invalidData',
+}
+
+async function onFileChosen(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  // Choisir deux fois le même fichier doit relancer un import : sans cela,
+  // `change` ne se déclenche pas la seconde fois.
+  input.value = ''
+  if (!file) return
+
+  failure.value = null
+  busy.value = true
+
+  const text = await readFileText(file)
+  const parsed = text === null ? null : parseDivvyFile(text)
+
+  if (!parsed) {
+    busy.value = false
+    failure.value = t('transfer.errors.readFailed')
+    return
+  }
+  if (!parsed.ok) {
+    busy.value = false
+    failure.value = t(importErrors[parsed.reason])
+    return
+  }
+
+  const imported = await vacationStore.importBundle(parsed.bundle)
+  busy.value = false
+  if (!imported) failure.value = t('transfer.errors.importFailed')
+}
 
 const vacations = computed(() => vacationStore.sortedVacations)
 
@@ -87,9 +169,22 @@ async function confirmDelete(): Promise<void> {
   <section class="section-card">
     <header class="section-head">
       <h2 class="section-title">{{ t('vacations.title') }}</h2>
-      <button v-if="!showNewForm" class="btn-primary" @click="showNewForm = true">
-        {{ t('vacations.new') }}
-      </button>
+      <div v-if="!showNewForm" class="head-actions">
+        <button class="btn-secondary" :disabled="busy" @click="fileInput?.click()">
+          {{ t('transfer.import') }}
+        </button>
+        <button class="btn-primary" @click="showNewForm = true">
+          {{ t('vacations.new') }}
+        </button>
+        <!-- Hors flux : le bouton ci-dessus lui sert de déclencheur. -->
+        <input
+          ref="fileInput"
+          type="file"
+          class="file-input"
+          accept=".divvy,application/json"
+          @change="onFileChosen"
+        />
+      </div>
     </header>
 
     <form v-if="showNewForm" class="new-form" @submit.prevent="create">
@@ -152,14 +247,11 @@ async function confirmDelete(): Promise<void> {
           {{ t('vacations.selected') }}
         </span>
 
-        <button
-          type="button"
-          class="btn-danger btn-small"
-          :aria-label="`${t('common.delete')} — ${vacation.name}`"
-          @click="pendingDelete = vacation"
-        >
-          {{ t('common.delete') }}
-        </button>
+        <RowActions
+          :actions="rowActions"
+          :label="`${t('common.actions')} — ${vacation.name}`"
+          @select="onRowAction($event, vacation)"
+        />
       </li>
     </ul>
 
@@ -253,9 +345,15 @@ async function confirmDelete(): Promise<void> {
   white-space: nowrap;
 }
 
-.btn-small {
-  font-size: var(--font-size-xs);
-  padding: var(--space-xs) var(--space-sm);
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Le champ fichier n'est jamais montré : le bouton l'actionne. */
+.file-input {
+  display: none;
 }
 
 .new-form {

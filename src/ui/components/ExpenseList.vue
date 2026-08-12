@@ -10,6 +10,7 @@ import { useCurrency } from '@/ui/composables/useCurrency'
 import ExpenseForm from './ExpenseForm.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import RowActions from './RowActions.vue'
+import type { RowAction } from './RowActions.vue'
 import type { Expense, ExpenseDraft } from '@/domains/expenses/types'
 
 const { t, locale } = useI18n()
@@ -48,6 +49,16 @@ function openAdd(): void {
   editingExpense.value = null
   failure.value = null
   showForm.value = true
+}
+
+const rowActions = computed<RowAction[]>(() => [
+  { key: 'edit', label: t('common.edit') },
+  { key: 'delete', label: t('common.delete'), danger: true },
+])
+
+function onRowAction(key: string, expense: Expense): void {
+  if (key === 'edit') openEdit(expense)
+  else confirmDeleteId.value = expense.id
 }
 
 function openEdit(expense: Expense): void {
@@ -129,7 +140,11 @@ async function confirmDelete(id: string): Promise<void> {
           <td>{{ payerName(expense.payerId) }}</td>
           <td class="numeric">{{ amount(expense.amountCents) }}</td>
           <td class="actions-cell">
-            <RowActions @edit="openEdit(expense)" @delete="confirmDeleteId = expense.id" />
+            <RowActions
+              :actions="rowActions"
+              :label="t('common.actions')"
+              @select="onRowAction($event, expense)"
+            />
           </td>
         </tr>
       </tbody>
