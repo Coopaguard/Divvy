@@ -133,8 +133,10 @@ describe('SettlementView', () => {
     expect(wrapper.findAll('.transfer').length).toBeLessThanOrEqual(3)
   })
 
-  describe('presence option', () => {
-    it('is off by default and hides the days column', async () => {
+  describe('split method', () => {
+    const select = 'select#split-method'
+
+    it('offers the three methods, simplest first', async () => {
       await selectVacation()
       addPerson('p1', 'Alice')
       await addExpense('p1', 1000)
@@ -142,22 +144,66 @@ describe('SettlementView', () => {
       const wrapper = mountView()
       await flushPromises()
 
-      expect((wrapper.find('input[type="checkbox"]').element as HTMLInputElement).checked).toBe(
-        false,
-      )
+      const values = wrapper.findAll(`${select} option`).map((o) => o.attributes('value'))
+      expect(values).toEqual(['shares', 'shareDays', 'presence'])
+    })
+
+    it('starts on the simple method, with no days column', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice')
+      await addExpense('p1', 1000)
+
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect((wrapper.find(select).element as HTMLSelectElement).value).toBe('shares')
       expect(wrapper.text()).not.toContain('Days')
     })
 
-    it('spares someone an expense made after they left', async () => {
+    it('explains the chosen method in words', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice')
+      await addExpense('p1', 1000)
+
+      const wrapper = mountView()
+      await flushPromises()
+      const simple = wrapper.find('.method-info').text()
+
+      await wrapper.find(select).setValue('presence')
+      await flushPromises()
+
+      const presence = wrapper.find('.method-info').text()
+      expect(presence).not.toBe(simple)
+      // Long enough to actually describe the rule, not a one-line label.
+      expect(presence.split(/\s+/).length).toBeGreaterThan(30)
+    })
+
+    it('spreads the total over shares and days under the by-day method', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10') // 10 days
+      addPerson('p2', 'Bob', 1, '2025-07-06', '2025-07-10') //  5 days
+      await addExpense('p1', 3000)
+
+      const wrapper = mountView()
+      await flushPromises()
+      await wrapper.find(select).setValue('shareDays')
+      await flushPromises()
+
+      // 15 share-days for 30 → 2 a day: Alice 20, Bob 10.
+      const rows = wrapper.findAll('.settlement-table tbody tr')
+      expect(rows[0]!.findAll('td')[3]!.text()).toContain('20')
+      expect(rows[1]!.findAll('td')[3]!.text()).toContain('10')
+    })
+
+    it('spares someone an expense made after they left, under the by-expense method', async () => {
       await selectVacation()
       addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10')
       addPerson('p2', 'Bob', 1, '2025-07-01', '2025-07-02')
-      // Dated the 3rd — Bob was already gone.
       await addExpense('p1', 3000, '2025-07-03')
 
       const wrapper = mountView()
       await flushPromises()
-      await wrapper.find('input[type="checkbox"]').setValue(true)
+      await wrapper.find(select).setValue('presence')
       await flushPromises()
 
       const rows = wrapper.findAll('.settlement-table tbody tr')
@@ -166,35 +212,19 @@ describe('SettlementView', () => {
       expect(wrapper.findAll('.transfer')).toHaveLength(0)
     })
 
-    it('charges only the expenses someone was there for', async () => {
-      await selectVacation()
-      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10')
-      addPerson('p2', 'Bob', 1, '2025-07-01', '2025-07-02')
-      await addExpense('p1', 1000, '2025-07-02') // both present
-      await addExpense('p1', 1000, '2025-07-08') // Alice alone
-
-      const wrapper = mountView()
-      await flushPromises()
-      await wrapper.find('input[type="checkbox"]').setValue(true)
-      await flushPromises()
-
-      const rows = wrapper.findAll('.settlement-table tbody tr')
-      const bob = rows.find((row) => row.text().includes('Bob'))!
-      // Half of the first expense only.
-      expect(bob.findAll('td')[3]!.text()).toContain('5.00')
-    })
-
-    it('shows the days column once ticked', async () => {
+    it('shows the days column for both day-based methods', async () => {
       await selectVacation()
       addPerson('p1', 'Alice')
       await addExpense('p1', 1000)
 
       const wrapper = mountView()
       await flushPromises()
-      await wrapper.find('input[type="checkbox"]').setValue(true)
-      await flushPromises()
 
-      expect(wrapper.text()).toContain('Days')
+      for (const method of ['shareDays', 'presence']) {
+        await wrapper.find(select).setValue(method)
+        await flushPromises()
+        expect(wrapper.text()).toContain('Days')
+      }
     })
 
     it('stores the choice on the vacation so it survives a reload', async () => {
@@ -205,12 +235,12 @@ describe('SettlementView', () => {
 
       const wrapper = mountView()
       await flushPromises()
-      await wrapper.find('input[type="checkbox"]').setValue(true)
+      await wrapper.find(select).setValue('shareDays')
       await flushPromises()
 
-      expect(useVacationStore().splitMethod).toBe('presence')
+      expect(useVacationStore().splitMethod).toBe('shareDays')
       expect(vi.mocked(vacationStorage.save)).toHaveBeenLastCalledWith(
-        expect.objectContaining({ id: created?.id, splitMethod: 'presence' }),
+        expect.objectContaining({ id: created?.id, splitMethod: 'shareDays' }),
       )
     })
 
@@ -224,13 +254,13 @@ describe('SettlementView', () => {
       await flushPromises()
 
       vi.mocked(vacationStorage.save).mockRejectedValueOnce(new Error('quota'))
-      await wrapper.find('input[type="checkbox"]').setValue(true)
+      await wrapper.find(select).setValue('presence')
       await flushPromises()
 
       expect(wrapper.find('.form-failure').exists()).toBe(true)
     })
 
-    it('starts ticked when the vacation was saved that way', async () => {
+    it('starts on the method the vacation was saved with', async () => {
       const store = useVacationStore()
       await selectVacation()
       await store.setSplitMethod('presence')
@@ -240,9 +270,7 @@ describe('SettlementView', () => {
       const wrapper = mountView()
       await flushPromises()
 
-      expect((wrapper.find('input[type="checkbox"]').element as HTMLInputElement).checked).toBe(
-        true,
-      )
+      expect((wrapper.find(select).element as HTMLSelectElement).value).toBe('presence')
     })
   })
 })

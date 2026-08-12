@@ -90,6 +90,27 @@ function owedByPresence(
   }, people.map(() => 0))
 }
 
+/**
+ * Prorata global sur les jours : le total est réparti sur les jours-parts de
+ * chacun (parts × jours de présence). Toutes les dépenses sont donc étalées
+ * uniformément sur les séjours — simple et prévisible, mais quelqu'un reparti
+ * tôt porte tout de même une fraction de ce qui a été dépensé après son départ.
+ * La méthode `presence` est là pour qui veut éviter cela.
+ *
+ * Retombe sur les parts seules si personne n'a de jour exploitable : mieux vaut
+ * répartir que de conclure que personne ne doit rien.
+ */
+function owedByShareDays(
+  people: readonly Person[],
+  totalCents: number,
+  shares: readonly number[],
+  days: readonly number[],
+): number[] {
+  const weights = people.map((_, index) => shares[index]! * days[index]!)
+  const usable = weights.some((weight) => weight > 0) ? weights : shares
+  return distribute(usable, totalCents)
+}
+
 export interface BalanceOptions {
   method?: SplitMethod
   vacation?: Vacation | null
@@ -107,10 +128,14 @@ export function computeBalances(
   const shares = people.map((person) => Math.max(0, person.shares))
   const totalCents = expenses.reduce((total, expense) => total + expense.amountCents, 0)
 
+  const days = people.map((person) => daysPresent(person, vacation))
+
   const owed =
     method === 'presence'
       ? owedByPresence(people, expenses, shares)
-      : distribute(shares, totalCents)
+      : method === 'shareDays'
+        ? owedByShareDays(people, totalCents, shares, days)
+        : distribute(shares, totalCents)
 
   const paidByPerson = new Map<string, number>()
   for (const expense of expenses) {
@@ -124,7 +149,7 @@ export function computeBalances(
       personId: person.id,
       name: person.name,
       shares: person.shares,
-      days: daysPresent(person, vacation),
+      days: days[index]!,
       owedCents,
       paidCents,
       balanceCents: paidCents - owedCents,

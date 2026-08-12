@@ -12,6 +12,11 @@
   --primary: #f57c00;
   --primary-soft: #fff3e8;
 
+  /* Information — a role, not an action: kept away from the orange so a
+     neutral explanation is never mistaken for something to click. */
+  --info: #0969da;
+  --info-soft: #ddf4ff;
+
   /* Accent colors (dataviz / categories) */
   --accent-green: #1a7f37;
   --accent-purple: #8250df;

@@ -76,3 +76,50 @@ describe('formatCents', () => {
     expect(formatCents(1250, 'fr')).not.toBe(formatCents(1250, 'en'))
   })
 })
+
+describe('formatCents — currency', () => {
+  // Intl separates the amount from the symbol with a narrow no-break space in
+  // French. Which space it picks is its business, not this suite's.
+  const norm = (text: string) => text.replace(/[\u202f\u00a0]/g, ' ')
+
+  it('uses the currency it is given, not the locale', () => {
+    // The whole point: reading in English must not restate euros as pounds.
+    expect(formatCents(60000, 'en', 'EUR')).toContain('€')
+    expect(formatCents(60000, 'fr', 'EUR')).toContain('€')
+  })
+
+  it('keeps the locale in charge of the shape', () => {
+    // Same currency, same amount — only the separator and placement move.
+    expect(norm(formatCents(60000, 'fr', 'EUR'))).toBe('600,00 €')
+    expect(formatCents(60000, 'en', 'EUR')).toBe('€600.00')
+  })
+
+  it('switches the symbol on demand', () => {
+    expect(formatCents(60000, 'en', 'GBP')).toBe('£600.00')
+    expect(formatCents(60000, 'en', 'USD')).toBe('$600.00')
+  })
+
+  it('writes the generic currency with the ¤ sign', () => {
+    expect(norm(formatCents(60000, 'fr', 'XXX'))).toBe('600,00 ¤')
+    expect(formatCents(60000, 'en', 'XXX')).toBe('¤600.00')
+  })
+
+  it('never shows the raw ISO code to the user', () => {
+    // Engines disagree on rendering the "no currency" code: Node prints ¤,
+    // Chromium prints "XXX". The sign is written by hand for that reason, and
+    // this pins it — a unit run alone could not have caught the difference.
+    for (const locale of ['fr', 'en']) {
+      expect(formatCents(60000, locale, 'XXX')).not.toContain('XXX')
+      expect(formatCents(60000, locale, 'XXX')).toContain('¤')
+    }
+  })
+
+  it('never changes the amount, only its symbol', () => {
+    const digits = (text: string) => text.replace(/[^\d]/g, '')
+    expect(digits(formatCents(60000, 'en', 'GBP'))).toBe(digits(formatCents(60000, 'en', 'EUR')))
+  })
+
+  it('falls back to the generic sign when no currency is given', () => {
+    expect(norm(formatCents(60000, 'fr'))).toBe('600,00 ¤')
+  })
+})

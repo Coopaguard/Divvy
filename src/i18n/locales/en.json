@@ -74,7 +74,7 @@
     }
   },
   "results": {
-    "title": "Split",
+    "title": "Summary",
     "chart": "Payers breakdown",
     "settlement": "Who owes whom",
     "totalsByPerson": "Total paid per person",
@@ -96,14 +96,17 @@
       "loadFailed": "Could not load the saved data",
       "saveFailed": "Could not save the changes",
       "deleteFailed": "Could not delete"
-    }
+    },
+    "actions": "Actions",
+    "language": "Language",
+    "currency": "Currency"
   },
   "steps": {
     "label": "Steps",
     "vacations": "Vacations",
     "people": "People",
     "expenses": "Expenses",
-    "results": "Split",
+    "results": "Summary",
     "locked": "Pick a vacation first",
     "settlement": "Reimbursements"
   },
@@ -122,7 +125,23 @@
     "balance": "Balance",
     "allSquare": "Everyone is square — nothing to reimburse.",
     "transferCount": "1 payment settles everything | {count} payments settle everything",
-    "presence": "Only share each expense between those present that day",
-    "presenceHint": "An expense is only charged to the people there on its date, in proportion to their shares. Someone who left the day before does not pay for the next day’s expense."
+    "method": "Split method",
+    "methods": {
+      "shares": "Simple — total ÷ shares",
+      "shareDays": "Pro rata by day — total ÷ shares ÷ days",
+      "presence": "Pro rata by expense — expense ÷ day ÷ shares"
+    },
+    "methodHints": {
+      "shares": "The total spend is divided by the total number of shares, then multiplied by each person's shares. Dates play no part: someone there for two days pays as much as someone who stayed the whole trip, at equal shares. To account for a shorter stay, lower their shares. Example: 300 over 6 shares makes 50 a share, so someone holding 2 shares owes 100.",
+      "shareDays": "Each person weighs their shares multiplied by their days of presence. The total is divided by the sum of those share-days, which gives the price of one share for one day. Spending is therefore spread evenly across the stays: someone who left early still carries a fraction of what was spent after they went. Example: 10 days for one, 5 for the other, so 15 share-days; 300 makes 20 per share-day.",
+      "presence": "Each expense is handled on its own, on its own date. Only the people there that day share it, in proportion to their shares; the others carry none of it. A stay covers both its ends: the day someone leaves still counts, the day after does not. This is the truest to what happened, but it relies on expense dates being right. Example: someone who left on the 2nd pays half the groceries of the 2nd, and nothing of the dinner on the 8th."
+    }
+  },
+  "currencies": {
+    "XXX": "Generic (no country)",
+    "EUR": "Euro",
+    "GBP": "Pound sterling",
+    "USD": "US dollar",
+    "CHF": "Swiss franc"
   }
 }

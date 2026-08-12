@@ -2,15 +2,17 @@
 // ExpensesSummary — combien chaque personne a avancé
 //
 // Périmètre volontairement réduit : on affiche ce qui a été *payé* par chacun.
-// Ce n'est pas encore la répartition — qui doit combien à qui relève de la
-// phase 6 (voir specs/07-repartition.md).
+// Ce n'est pas la répartition — qui doit combien à qui est l'étape suivante,
+// « Remboursements » (voir specs/07-repartition.md).
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { formatCents } from '@/domains/shared/money'
+import { useCurrency } from '@/ui/composables/useCurrency'
 
 const { t, locale } = useI18n()
+const { currency } = useCurrency()
 const expenseStore = useExpenseStore()
 const peopleStore = usePeopleStore()
 
@@ -39,7 +41,7 @@ const hasSomethingToShow = computed(
 )
 
 function amount(cents: number): string {
-  return formatCents(cents, locale.value)
+  return formatCents(cents, locale.value, currency.value)
 }
 </script>
 

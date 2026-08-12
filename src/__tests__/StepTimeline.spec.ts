@@ -5,6 +5,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import StepTimeline from '@/ui/components/StepTimeline.vue'
 import { useVacationStore } from '@/stores/vacationStore'
 import { STEPS } from '@/domains/navigation/steps'
+import { SERIES_COLORS } from '@/domains/shared/palette'
 import { globalPlugins, routerAt } from './helpers'
 
 vi.mock('@/domains/storage/db', async () => (await import('./storageMock')).createStorageMock())
@@ -86,6 +87,62 @@ describe('StepTimeline', () => {
     await selectVacation()
     const wrapper = await mountTimeline()
     const labels = wrapper.findAll('.step-label').map((node) => node.text())
-    expect(labels).toEqual(['Vacations', 'People', 'Expenses', 'Split', 'Reimbursements'])
+    expect(labels).toEqual(['Vacations', 'People', 'Expenses', 'Summary', 'Reimbursements'])
+  })
+
+  describe('colours', () => {
+    it('gives every step its own hue', async () => {
+      await selectVacation()
+      const wrapper = await mountTimeline()
+
+      const colours = wrapper
+        .findAll('.timeline-step')
+        .map((step) => step.attributes('style'))
+      expect(new Set(colours).size).toBe(STEPS.length)
+    })
+
+    it('takes the hues from the shared palette, in order', async () => {
+      await selectVacation()
+      const wrapper = await mountTimeline()
+
+      const first = wrapper.findAll('.timeline-step')[0]!.attributes('style')
+      expect(first).toContain(SERIES_COLORS[0])
+    })
+
+    it('keeps a hue tied to its step, whatever the current step is', async () => {
+      await selectVacation()
+      const onStepOne = await mountTimeline('vacations')
+      const onStepFour = await mountTimeline('results')
+
+      const hueOf = (wrapper: typeof onStepOne, index: number) =>
+        wrapper.findAll('.timeline-step')[index]!.attributes('style')
+
+      expect(hueOf(onStepFour, 1)).toBe(hueOf(onStepOne, 1))
+    })
+
+    it('leaves the labels in ink rather than in the series colour', async () => {
+      await selectVacation()
+      const wrapper = await mountTimeline()
+      // Three of these hues fall under 3:1 against the page, so no word or
+      // figure may be painted with them.
+      const label = wrapper.find('.step-label')
+      expect(label.attributes('style')).toBeUndefined()
+    })
+  })
+
+  describe('narrow screens', () => {
+    it('names the current step in a caption, in full', async () => {
+      await selectVacation()
+      const wrapper = await mountTimeline('settlement')
+      // Five long words cannot share one phone-width row; the caption carries
+      // the name so the markers never have to chop it.
+      expect(wrapper.find('.current-label').text()).toBe('Reimbursements')
+    })
+
+    it('follows the current step', async () => {
+      await selectVacation()
+      const wrapper = await mountTimeline('people')
+      expect(wrapper.find('.current-label').text()).toBe('People')
+    })
   })
 })
