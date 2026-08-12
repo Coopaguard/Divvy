@@ -93,7 +93,12 @@ function personName(id: string): string {
             {{ entry.label }}
           </option>
         </select>
-        <p class="option-hint">{{ methodHint }}</p>
+        <!-- How the chosen method works, spelled out: the point is that the
+             figures below can be redone by hand. -->
+        <p class="method-info" role="note">
+          <span class="method-info-icon" aria-hidden="true">i</span>
+          <span>{{ methodHint }}</span>
+        </p>
       </div>
 
       <p v-if="failure" class="form-failure" role="alert">{{ failure }}</p>
@@ -203,11 +208,34 @@ function personName(id: string): string {
   color: var(--text);
 }
 
-.option-hint {
-  display: block;
+.method-info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--primary);
+  background: var(--primary-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
   font-size: var(--font-size-xs);
-  color: var(--muted);
-  margin-top: 2px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.method-info-icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
 }
 
 .form-failure {

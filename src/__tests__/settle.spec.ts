@@ -4,6 +4,9 @@ import { computeBalances, daysPresent, optimiseTransfers } from '@/domains/settl
 import type { Expense } from '@/domains/expenses/types'
 import type { Person } from '@/domains/people/types'
 import type { Vacation } from '@/domains/vacations/types'
+import { SPLIT_METHODS } from '@/domains/settlement/types'
+import fr from '@/i18n/locales/fr.json'
+import en from '@/i18n/locales/en.json'
 
 function person(
   id: string,
@@ -422,6 +425,27 @@ describe('settlement end to end', () => {
 
     for (const method of ['shares', 'shareDays', 'presence'] as const) {
       expect(owed(method).reduce((sum, value) => sum + value, 0)).toBe(2000)
+    }
+  })
+})
+
+describe('method explanations', () => {
+  const catalogues: [string, Record<string, string>][] = [
+    ['fr', fr.settlement.methodHints],
+    ['en', en.settlement.methodHints],
+  ]
+
+  it.each(catalogues)('%s explains every method', (_locale, hints) => {
+    for (const method of SPLIT_METHODS) {
+      expect(hints[method]?.length ?? 0).toBeGreaterThan(0)
+    }
+  })
+
+  it.each(catalogues)('%s keeps each explanation under 100 words', (_locale, hints) => {
+    // Long enough to describe the rule, short enough that it still gets read.
+    for (const method of SPLIT_METHODS) {
+      const words = (hints[method] ?? '').trim().split(/\s+/).length
+      expect(words).toBeLessThanOrEqual(100)
     }
   })
 })

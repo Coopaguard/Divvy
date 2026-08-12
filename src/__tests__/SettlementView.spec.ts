@@ -167,12 +167,15 @@ describe('SettlementView', () => {
 
       const wrapper = mountView()
       await flushPromises()
-      const simple = wrapper.find('.option-hint').text()
+      const simple = wrapper.find('.method-info').text()
 
       await wrapper.find(select).setValue('presence')
       await flushPromises()
 
-      expect(wrapper.find('.option-hint').text()).not.toBe(simple)
+      const presence = wrapper.find('.method-info').text()
+      expect(presence).not.toBe(simple)
+      // Long enough to actually describe the rule, not a one-line label.
+      expect(presence.split(/\s+/).length).toBeGreaterThan(30)
     })
 
     it('spreads the total over shares and days under the by-day method', async () => {

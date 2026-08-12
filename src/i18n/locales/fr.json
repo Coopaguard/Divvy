@@ -132,9 +132,9 @@
       "presence": "Prorata par dépense — dépense ÷ jour ÷ parts"
     },
     "methodHints": {
-      "shares": "Le total est partagé entre tout le monde au prorata des parts. Les dates ne comptent pas.",
-      "shareDays": "Le total est réparti sur les parts et les jours de présence : une part coûte un prix par jour. Toutes les dépenses sont étalées uniformément sur les séjours, y compris sur ceux qui étaient déjà repartis.",
-      "presence": "Chaque dépense n’est partagée qu’entre les personnes présentes à sa date, au prorata de leurs parts. Quelqu’un reparti la veille ne paie pas la dépense du lendemain."
+      "shares": "Le total des dépenses est divisé par le nombre total de parts, puis multiplié par les parts de chacun. Les dates ne comptent pas : quelqu'un présent deux jours paie autant qu'une personne restée tout le séjour, à parts égales. Pour tenir compte d'une présence plus courte, réduisez ses parts. Exemple : 300 € pour 6 parts font 50 € la part ; une personne à 2 parts doit donc 100 €.",
+      "shareDays": "Chaque personne pèse ses parts multipliées par ses jours de présence. Le total est divisé par la somme de ces jours-parts, ce qui donne le prix d'une part pour une journée. Les dépenses sont ainsi étalées uniformément sur le séjour : quelqu'un reparti tôt porte encore une fraction de ce qui a été dépensé après son départ. Exemple : 10 jours pour l'un, 5 pour l'autre, soit 15 jours-parts ; 300 € font 20 € le jour-part.",
+      "presence": "Chaque dépense est traitée séparément, à sa propre date. Seules les personnes présentes ce jour-là se la partagent, au prorata de leurs parts ; les autres n'en portent rien. Un séjour couvre ses deux bornes : le jour du départ compte encore, le lendemain non. C'est le calcul le plus fidèle aux faits, mais il suppose des dates de dépense exactes. Exemple : quelqu'un reparti le 2 paie la moitié des courses du 2, et rien du restaurant du 8."
     }
   },
   "currencies": {
