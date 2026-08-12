@@ -36,20 +36,14 @@ function reload(): void {
 </template>
 
 <style scoped>
+/* Le placement à l'écran appartient à la pile de bannières d'AppShell : deux
+   bannières fixées chacune de son côté se recouvriraient. */
 .update-prompt {
-  position: fixed;
-  left: var(--space-md);
-  right: var(--space-md);
-  /* Au-dessus de la barre système sur les téléphones à encoche. */
-  bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
-  z-index: 40;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
   flex-wrap: wrap;
-  max-width: 520px;
-  margin: 0 auto;
   padding: var(--space-md);
   border: 1px solid var(--info);
   border-left-width: 3px;

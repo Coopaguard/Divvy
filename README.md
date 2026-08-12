@@ -36,8 +36,9 @@ qui suit est rattaché à celle-là.
   la feuille d'envoi du téléphone, ou en réimporter une. Un import n'écrase jamais
   ce qui est déjà là — voir `specs/08-import-export.md`.
 - **Installable et hors ligne** : l'application s'installe sur téléphone et
-  fonctionne sans réseau. Une nouvelle version est *proposée*, jamais imposée —
-  voir `specs/09-pwa.md`.
+  fonctionne sans réseau. Ouverte dans un onglet, elle propose elle-même de
+  s'installer — une fois, puis elle se tait un mois si l'on décline. Une nouvelle
+  version est *proposée*, jamais imposée — voir `specs/09-pwa.md`.
 - Reprise depuis le stockage local : les vacances enregistrées sont retrouvées au
   démarrage. La *sélection*, elle, est volontairement remise à zéro — on rechoisit
   la vacance à éditer à chaque ouverture.

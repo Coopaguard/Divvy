@@ -14,6 +14,7 @@ import StepNav from '@/ui/components/StepNav.vue'
 import LanguageMenu from '@/ui/components/LanguageMenu.vue'
 import CurrencyMenu from '@/ui/components/CurrencyMenu.vue'
 import UpdatePrompt from '@/ui/components/UpdatePrompt.vue'
+import InstallPrompt from '@/ui/components/InstallPrompt.vue'
 
 const { t } = useI18n()
 const vacationStore = useVacationStore()
@@ -63,7 +64,12 @@ watch(
       <StepNav />
     </main>
 
-    <UpdatePrompt />
+    <!-- Bannières empilées, la plus urgente en bas, près du pouce. Le conteneur
+         n'intercepte rien : hors bannière, on touche la page derrière. -->
+    <div class="app-prompts">
+      <InstallPrompt />
+      <UpdatePrompt />
+    </div>
   </div>
 </template>
 
@@ -125,6 +131,27 @@ watch(
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--text);
+}
+
+.app-prompts {
+  position: fixed;
+  left: var(--space-md);
+  right: var(--space-md);
+  /* Au-dessus de la barre système sur les téléphones à encoche. */
+  bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 520px;
+  margin: 0 auto;
+  /* Vide, la pile couvre tout de même le bas de l'écran : elle laisse donc
+     passer les clics, et chaque bannière les reprend pour elle. */
+  pointer-events: none;
+}
+
+.app-prompts > * {
+  pointer-events: auto;
 }
 
 @media (min-width: 768px) {

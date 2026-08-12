@@ -167,5 +167,12 @@
     "available": "A new version is available.",
     "reload": "Reload",
     "later": "Later"
+  },
+  "install": {
+    "title": "Install Divvy",
+    "why": "From your home screen, and even offline.",
+    "iosHint": "Tap Share, then “Add to Home Screen”.",
+    "action": "Install",
+    "later": "Later"
   }
 }

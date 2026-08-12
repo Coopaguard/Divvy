@@ -167,5 +167,12 @@
     "available": "Une nouvelle version est disponible.",
     "reload": "Recharger",
     "later": "Plus tard"
+  },
+  "install": {
+    "title": "Installer Divvy",
+    "why": "Depuis l’écran d’accueil, et même hors ligne.",
+    "iosHint": "Touchez Partager, puis « Sur l’écran d’accueil ».",
+    "action": "Installer",
+    "later": "Plus tard"
   }
 }
