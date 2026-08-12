@@ -214,8 +214,8 @@ function personName(id: string): string {
   gap: var(--space-sm);
   margin-top: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
-  border-left: 3px solid var(--primary);
-  background: var(--primary-soft);
+  border-left: 3px solid var(--info);
+  background: var(--info-soft);
   border-radius: 0 var(--radius) var(--radius) 0;
   font-size: var(--font-size-xs);
   line-height: 1.5;
@@ -230,7 +230,7 @@ function personName(id: string): string {
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--info);
   color: #fff;
   font-size: 0.72rem;
   font-weight: 700;

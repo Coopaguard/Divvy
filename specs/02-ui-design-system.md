@@ -30,6 +30,14 @@ Créer une interface :
 - `--primary`: `#f57c00` (orange)
 - `--primary-soft`: `#fff3e8` (fond orange très léger)
 
+### Couleur d'information
+- `--info`: `#0969da` (bleu)
+- `--info-soft`: `#ddf4ff` (fond bleu très léger)
+
+Réservée aux blocs explicatifs. **Distincte de l'orange primaire** : celui-ci
+signale une action, et une explication neutre ne doit pas se lire comme un
+bouton.
+
 ### Couleurs d'accent (dataviz / catégories)
 - `--accent-green`: `#1a7f37`
 - `--accent-purple`: `#8250df`
