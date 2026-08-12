@@ -2,81 +2,93 @@
 
 ## Objectif
 
-Lister les composants d’interface nécessaires au MVP.
+Recenser les composants d'interface effectivement présents dans l'application, et ce
+dont chacun a la charge.
 
-## Composants globaux
+> **Historique.** Ce document listait des composants prévus avant l'implémentation
+> (`HeaderBar`, `BurgerMenu`, `SideFloatingNav`, `PayersPieChart`, `SettlementTable`,
+> `EmptyState`…). La navigation par ancres ayant été remplacée par un parcours en
+> étapes, plusieurs n'ont jamais existé sous ce nom : la liste ci-dessous décrit le
+> code tel qu'il est.
 
-### `AppShell`
-- Structure générale de la page
-- Contient header + contenu principal
+## Structure
 
-### `HeaderBar`
-- Nom des vacances (ou "Nouvelles vacances")
-- Actions globales : exporter / importer / nouveau
+### `AppShell` (`ui/layouts/`)
+En-tête collant (nom de l'application, menus devise et langue), timeline, contenu de
+l'étape par le slot, navigation précédent/suivant. Charge les vacances au montage et
+recharge personnes et dépenses à chaque changement de sélection — point unique qui
+garantit qu'aucune étape n'affiche les données d'une autre vacance.
 
-### `SectionCard`
-- Conteneur standard pour chaque bloc (Vacances, Personnes, Dépenses, Résultats)
-- Style flat avec bordure
+### `.section-card`
+Classe partagée (`ui/assets/design-system.css`), et non un composant : conteneur
+bordé standard de chaque bloc.
 
 ## Navigation
 
-### `BurgerMenu` (mobile)
-- Bouton burger
-- Ouvre un panneau de navigation full screen
-- Ferme le menu au clic sur un item
+### `StepTimeline`
+Les cinq étapes en haut. Une couleur par étape, portée par la pastille et jamais par
+un mot — trois teintes de la palette passent sous 3:1 de contraste avec la page. Les
+étapes verrouillées sont rendues en texte simple, ni cliquables ni tabulables.
 
-### `SideFloatingNav` (desktop)
-- Navigation flottante à gauche
-- Liens d'ancrage vers les sections
-- Mise en évidence de la section active
+### `StepNav`
+Boutons précédent / suivant, désactivés aux extrémités et quand l'étape suivante est
+verrouillée.
+
+## Vues d'étape (`views/`)
+
+`VacationsView`, `PeopleView`, `ExpensesView`, `ResultsView`, `SettlementView` — une
+par route. Les trois du milieu ne font que rendre leur composant métier.
 
 ## Composants métier
 
 ### `VacationForm`
-- Champs : titre, date début, date fin
-- Validation minimale des dates
+Édition de la vacance sélectionnée (titre, dates). La suppression vit dans la liste,
+là où l'on choisit *laquelle* supprimer.
 
-### `PeopleList`
-- Liste des personnes
-- Bouton ajout
-- Actions ligne : éditer / supprimer
+### `PeopleList` / `PersonForm`
+Liste et saisie : nom, parts, dates d'arrivée et de départ, valeurs par défaut issues
+des vacances.
 
-### `PersonForm`
-- Champs : nom, parts, date arrivée, date départ
-- Valeurs par défaut issues des vacances
+### `ExpenseList` / `ExpenseForm`
+Liste triée du plus récent au plus ancien, total en pied. Saisie : payeur, montant,
+libellé, date du jour par défaut.
 
-### `ExpenseList`
-- Liste des dépenses
-- Tri par date
-- Actions ligne : éditer / supprimer
+### `ExpensesSummary`
+Total payé par personne, du plus élevé au plus faible. Les personnes n'ayant rien
+payé apparaissent à zéro : c'est ce que les remboursements devront compenser.
+Accueille le camembert par un slot.
 
-### `ExpenseForm`
-- Champs : payeur, montant, libellé, date
-- Date pré-remplie avec la date du jour
-
-### `PayersPieChart`
-- Camembert de la répartition des montants payés
-
-### `SettlementTable`
-- Tableau des transferts "qui doit combien à qui"
+### `ExpensesPieChart`
+Part de chaque payeur, en SVG écrit à la main — pas de librairie de graphiques. Une
+teinte par personne, choisie sur sa position dans la liste et non sur son rang, pour
+qu'une dépense de plus ne repeigne pas tout le monde. Au-delà de six payeurs, la
+queue est regroupée sous « Autres ».
 
 ## Composants utilitaires
 
-### `PrimaryGhostButton`
-- Bouton principal orange ghost (voir design system)
-
 ### `ConfirmDialog`
-- Confirmation avant suppression
+Confirmation avant suppression.
 
-### `EmptyState`
-- État vide pour listes sans données
+### `RowActions`
+Actions d'une ligne de tableau : en clair à partir de 768 px, repliées sous un
+bouton « … » en dessous.
 
-### `LanguageSwitcher`
-- Sélecteur de langue FR / EN (phase 3 roadmap)
+### `LanguageMenu` / `CurrencyMenu`
+Langue active et devise de l'application, chacune sous un menu. Chaque entrée est
+**nommée en toutes lettres** : un drapeau ou un symbole n'est jamais le seul indice.
+
+## Composables (`ui/composables/`)
+
+### `useDismissMenu`
+Ouverture d'un menu, fermeture au clic extérieur et à Échap, écouteurs retirés au
+démontage. Partagé par les trois menus.
+
+### `useCurrency`
+Devise active de l'application, partagée entre tous les composants.
 
 ## États d'interface
 
 - Chargement initial
-- Aucune donnée
-- Erreur d'import
-- Données invalides (formulaires)
+- Aucune donnée (état vide propre à chaque liste)
+- Échec d'écriture : message affiché, saisie conservée
+- Données invalides (validation de formulaire)

@@ -12,7 +12,8 @@ Permettre la création de vacances et la gestion des personnes, avec persistance
 - Ajout, édition, suppression des **personnes** (nom, parts, dates arrivée/départ)
 - Stockage dans **IndexedDB**
 - Reprise automatique depuis le stockage local
-- Interface one-page basique avec navigation
+- Interface avec navigation (devenue un parcours en étapes, voir
+  `specs/03-ui-parcours-etapes.md`)
 
 ### Livrables
 - Composants Vue : `VacationForm`, `PeopleList`, `PersonForm`
@@ -60,7 +61,7 @@ Ajouter la prise en charge de plusieurs langues (français et anglais).
 
 ### Livrables
 - Fichiers de traduction : `locales/fr.json`, `locales/en.json`
-- Composant `LanguageSwitcher`
+- Composant `LanguageMenu`
 - Documentation i18n
 
 ### Critères de validation
@@ -99,14 +100,13 @@ Permettre l'ajout, l'édition et la suppression des dépenses.
 Afficher une vue synthétique des dépenses saisies.
 
 ### Périmètre
-- Vue en liste/tableau des dépenses
-- Filtres par personne, date, etc.
 - Total des dépenses par personne
 - Dataviz simple (camembert de répartition des payeurs)
+- *Filtres par personne / date : reportés, non livrés*
 
 ### Livrables
 - Composant `ExpensesSummary`
-- Composant `PayersPieChart`
+- Composant `ExpensesPieChart`
 - Logique d'agrégation des montants
 
 ### Critères de validation
@@ -122,15 +122,14 @@ Afficher une vue synthétique des dépenses saisies.
 Calculer automatiquement qui doit combien à qui et afficher le tableau de règlement.
 
 ### Périmètre
-- Algorithme de répartition équitable **au prorata des parts** (voir
-  `specs/07-repartition.md` pour la règle retenue)
+- Trois méthodes de répartition au choix — parts seules, prorata par jour, prorata
+  par dépense (voir `specs/07-repartition.md`)
 - Calcul des transferts optimisés
 - Tableau « qui doit combien à qui »
-- Export des résultats
 
 ### Livrables
 - Domaine métier : `settlement/`
-- Composant `SettlementTable`
+- Vue `SettlementView`
 - Algorithme de calcul documenté
 - Tests unitaires pour la répartition
 
@@ -138,7 +137,6 @@ Calculer automatiquement qui doit combien à qui et afficher le tableau de règl
 - Calcul correct pour plusieurs scénarios (parts différentes, montants indivisibles)
 - Tableau de règlement lisible et cohérent
 - Transferts optimisés (minimum de transactions)
-- Export `.divvy` fonctionnel incluant les calculs
 
 ---
 
@@ -170,6 +168,6 @@ Permettre l'import et l'export d'une session complète.
 - Synchronisation cloud optionnelle
 - Notifications de rappel
 - Partage de session entre utilisateurs
-- Multi-devises
+- Multi-devises (conversion ; le *choix* d'un symbole d'affichage est livré)
 - Catégories de dépenses
 - Historique des modifications

@@ -1,41 +1,72 @@
 # Divvy
 
-**Divvy** est une application web **single-page** pour partager simplement les dépenses de vacances entre amis.
+**Divvy** est une application web pour partager simplement les dépenses de vacances entre amis.
 
-Ajoutez les personnes, saisissez les dépenses, et obtenez instantanément qui doit combien à qui.
+Ajoutez les personnes, saisissez les dépenses, et obtenez qui doit combien à qui.
 
-## ✨ Fonctionnalités (MVP)
+**Démo** : https://coopaguard.github.io/Divvy/
 
-- Création et édition des **vacances** (titre, dates début/fin)
-- Gestion des **personnes** (nom, parts, dates arrivée/départ)
-- Saisie des **dépenses** (payeur, montant, libellé, date)
-- Édition et suppression des personnes et dépenses
-- Vue récapitulative : camembert de répartition + tableau de règlement
-- Reprise depuis stockage local
+## ✨ Fonctionnalités
+
+Le parcours se déroule en **cinq étapes**, chacune sur son propre écran :
+
+1. **Vacances** — choisir, créer ou supprimer une vacance (titre, dates début/fin)
+2. **Personnes** — nom, parts, dates d'arrivée et de départ
+3. **Dépenses** — payeur, montant, libellé, date
+4. **Récapitulatif** — camembert des payeurs et total payé par personne
+5. **Remboursements** — quote-part de chacun, puis les virements à effectuer
+
+Les étapes 2 à 5 restent verrouillées tant qu'aucune vacance n'est choisie : tout ce
+qui suit est rattaché à celle-là.
+
+Également :
+
+- **Trois méthodes de répartition** au choix — simple (total ÷ parts), au prorata
+  des jours (total ÷ parts ÷ jours), ou dépense par dépense selon les présents à sa
+  date. La méthode est enregistrée sur la vacance.
+- **Virements optimisés** : le moins de paiements possible, et le moins
+  d'interlocuteurs possible pour chacun.
+- **Devise au choix** (générique, €, £, $, CHF), indépendante de la langue.
+- **FR / EN**, avec préférence conservée.
+- Reprise depuis le stockage local : les vacances enregistrées sont retrouvées au
+  démarrage. La *sélection*, elle, est volontairement remise à zéro — on rechoisit
+  la vacance à éditer à chaque ouverture.
+
+### À venir
+
 - Import / export d'un fichier `.divvy`
+- Restriction des dépenses à partir d'une date donnée
+
+## 💶 Exactitude des montants
+
+Les montants sont stockés en **centimes entiers**, jamais en flottants : `0.1 + 0.2`
+ne vaut pas `0.3` en IEEE-754, et l'écart se propagerait aux totaux puis aux
+remboursements. Les divisions qui ne tombent pas juste voient leur reste distribué
+plutôt que perdu, de sorte que la somme des quotes-parts égale **exactement** le
+total dépensé et que les virements soldent au centime près.
 
 ## 🧱 Stack technique
 
-- **Vue 3** (SPA)
-- **IndexedDB** (stockage local)
+- **Vue 3** + **Vue Router** + **Pinia**
+- **Vue I18n** (FR / EN)
+- **IndexedDB** (stockage local, sans dépendance)
+- **Vitest** + **Vue Test Utils**
 - Objectif : **compatibilité PWA**
+
+Aucune librairie de graphiques : le camembert est du SVG écrit à la main, pour ne pas
+payer une dépendance plus lourde que la fonctionnalité.
 
 ## 🎨 Design
 
-- Style **flat** et **light** (inspiration GitHub)
-- Fond de page : **blanc**
+- Style **flat** et **light** (inspiration GitHub), fond de page **blanc**
 - Boutons primaires : **ghost orange** (fond blanc, bordure/texte orange)
-- Navigation : burger menu full screen (mobile), menu flottant gauche (desktop)
-
-## 🌍 i18n
-
-Prise en charge **FR / EN** prévue dès le départ (déploiement progressif selon roadmap).
+- Navigation : **timeline d'étapes** en haut, boutons précédent / suivant en bas
+- Sur téléphone, la timeline se réduit aux pastilles numérotées et les actions des
+  tableaux se replient sous un bouton « … »
 
 ## 🚀 Déploiement
 
 Déploiement automatique sur **GitHub Pages** (build à chaque push sur `main`).
-
-**Démo** : https://coopaguard.github.io/Divvy/
 
 ## 📚 Documentation
 
