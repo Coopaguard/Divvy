@@ -227,6 +227,51 @@ describe('SettlementView', () => {
       }
     })
 
+    it('shows what one share costs per day, under the by-day method only', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-10') // 10 share-days
+      addPerson('p2', 'Bob', 1, '2025-07-06', '2025-07-10') //   5
+      await addExpense('p1', 3000)
+
+      const wrapper = mountView()
+      await flushPromises()
+      expect(wrapper.find('.rate').exists()).toBe(false)
+
+      await wrapper.find(select).setValue('shareDays')
+      await flushPromises()
+
+      // 15 share-days for 30 → 2 a day.
+      expect(wrapper.find('.rate-value').text()).toContain('2.00')
+      expect(wrapper.find('.rate-units').text()).toContain('15')
+    })
+
+    it('hides the rate under the by-expense method, which has no single one', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice')
+      await addExpense('p1', 3000)
+
+      const wrapper = mountView()
+      await flushPromises()
+      await wrapper.find(select).setValue('presence')
+      await flushPromises()
+
+      expect(wrapper.find('.rate').exists()).toBe(false)
+    })
+
+    it('says the rate is rounded, so nobody reads it as a contradiction', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-03') // 3 share-days
+      await addExpense('p1', 1000)
+
+      const wrapper = mountView()
+      await flushPromises()
+      await wrapper.find(select).setValue('shareDays')
+      await flushPromises()
+
+      // 10 over 3 never falls on a round number of cents.
+      expect(wrapper.find('.rate-note').text().length).toBeGreaterThan(0)
+    })
+
     it('stores the choice on the vacation so it survives a reload', async () => {
       const { vacationStorage } = await import('@/domains/storage/db')
       const created = await selectVacation()

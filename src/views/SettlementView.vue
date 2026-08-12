@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { useExpenseStore } from '@/stores/expenseStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { useVacationStore } from '@/stores/vacationStore'
-import { computeBalances, optimiseTransfers } from '@/domains/settlement/settle'
+import { computeBalances, optimiseTransfers, shareDayRate } from '@/domains/settlement/settle'
 import { SPLIT_METHODS, type SplitMethod } from '@/domains/settlement/types'
 import { formatCents } from '@/domains/shared/money'
 import { useCurrency } from '@/ui/composables/useCurrency'
@@ -40,6 +40,17 @@ const methodHint = computed(() => t(`settlement.methodHints.${vacationStore.spli
 
 /** Days only weigh under the day-based methods; showing them otherwise misleads. */
 const showsDays = computed(() => vacationStore.splitMethod !== 'shares')
+
+/**
+ * Ce que vaut une part pour une journée. Ce prix n'existe que sous la méthode
+ * par jour : la simple ignore les dates, et celle par dépense n'a pas de cote
+ * unique — chaque dépense a la sienne.
+ */
+const rate = computed(() =>
+  vacationStore.splitMethod === 'shareDays'
+    ? shareDayRate(balances.value, totalCents.value)
+    : null,
+)
 
 const balances = computed(() =>
   computeBalances(peopleStore.people, expenseStore.expenses, {
@@ -102,6 +113,17 @@ function personName(id: string): string {
       </div>
 
       <p v-if="failure" class="form-failure" role="alert">{{ failure }}</p>
+
+      <div v-if="rate" class="rate">
+        <div class="rate-head">
+          <span class="rate-title">{{ t('settlement.rateTitle') }}</span>
+          <span class="rate-value">{{ amount(rate.rateCents) }}</span>
+        </div>
+        <span class="rate-units">{{ t('settlement.rateUnits', rate.units) }}</span>
+        <!-- Le total ne se divise presque jamais en un compte rond de centimes :
+             on le dit, plutôt que de laisser croire à une incohérence. -->
+        <span class="rate-note">{{ t('settlement.rateRounded') }}</span>
+      </div>
 
       <h3 class="subsection-title">{{ t('settlement.sharesTitle') }}</h3>
       <div class="table-scroll">
@@ -242,6 +264,48 @@ function personName(id: string): string {
   font-size: var(--font-size-sm);
   color: #cf222e;
   margin-top: var(--space-sm);
+}
+
+.rate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.rate-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.rate-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.rate-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rate-units {
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+}
+
+.rate-note {
+  font-size: var(--font-size-xs);
+  color: var(--muted);
+  font-style: italic;
 }
 
 /* Wide tables scroll inside their own box rather than the page. */

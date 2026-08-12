@@ -158,6 +158,26 @@ export function computeBalances(
 }
 
 /**
+ * Ce que vaut **une part pour une journée**, sous la méthode `shareDays` : le
+ * total divisé par la somme des jours-parts.
+ *
+ * Le résultat n'est pas un nombre entier de centimes, et ne peut pas l'être —
+ * 480 € sur 35 jours-parts font 13,714… Cette cote est donc **indicative** :
+ * les quote-parts sont calculées sur le total, pas en multipliant cette valeur,
+ * sans quoi les arrondis ne boucleraient plus. L'appelant l'affiche comme telle.
+ *
+ * Null quand aucun jour-part n'est en jeu — il n'y a alors pas de cote à donner.
+ */
+export function shareDayRate(
+  balances: readonly Balance[],
+  totalCents: number,
+): { units: number; rateCents: number } | null {
+  const units = balances.reduce((sum, balance) => sum + balance.shares * balance.days, 0)
+  if (units <= 0) return null
+  return { units, rateCents: totalCents / units }
+}
+
+/**
  * Qui rembourse qui, en **aussi peu de virements que possible**.
  *
  * À chaque tour, le plus gros débiteur paie le plus gros créancier : l'un des
