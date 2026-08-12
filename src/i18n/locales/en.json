@@ -143,5 +143,10 @@
     "GBP": "Pound sterling",
     "USD": "US dollar",
     "CHF": "Swiss franc"
+  },
+  "update": {
+    "available": "A new version is available.",
+    "reload": "Reload",
+    "later": "Later"
   }
 }

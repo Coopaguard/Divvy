@@ -28,6 +28,9 @@ qui suit est rattaché à celle-là.
   d'interlocuteurs possible pour chacun.
 - **Devise au choix** (générique, €, £, $, CHF), indépendante de la langue.
 - **FR / EN**, avec préférence conservée.
+- **Installable et hors ligne** : l'application s'installe sur téléphone et
+  fonctionne sans réseau. Une nouvelle version est *proposée*, jamais imposée —
+  voir `specs/09-pwa.md`.
 - Reprise depuis le stockage local : les vacances enregistrées sont retrouvées au
   démarrage. La *sélection*, elle, est volontairement remise à zéro — on rechoisit
   la vacance à éditer à chaque ouverture.
@@ -51,7 +54,7 @@ total dépensé et que les virements soldent au centime près.
 - **Vue I18n** (FR / EN)
 - **IndexedDB** (stockage local, sans dépendance)
 - **Vitest** + **Vue Test Utils**
-- Objectif : **compatibilité PWA**
+- **PWA** : manifeste et service worker via `vite-plugin-pwa`
 
 Aucune librairie de graphiques : le camembert est du SVG écrit à la main, pour ne pas
 payer une dépendance plus lourde que la fonctionnalité.
