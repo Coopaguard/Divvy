@@ -178,6 +178,22 @@ export function shareDayRate(
 }
 
 /**
+ * Ce qu'une part a coûté par jour **à cette personne-là**.
+ *
+ * Sous `presence`, il n'y a pas de cote unique : chacun ne porte que les
+ * dépenses des jours où il était là. Deux personnes aux mêmes parts n'ont donc
+ * pas le même prix au jour-part — celui qui n'a vu que les grosses journées
+ * paie plus cher la sienne. C'est précisément ce que cette valeur montre.
+ *
+ * Indicative comme la précédente, et null quand la personne n'a aucun jour-part.
+ */
+export function personDayRate(balance: Balance): number | null {
+  const units = balance.shares * balance.days
+  if (units <= 0) return null
+  return balance.owedCents / units
+}
+
+/**
  * Qui rembourse qui, en **aussi peu de virements que possible**.
  *
  * À chaque tour, le plus gros débiteur paie le plus gros créancier : l'un des

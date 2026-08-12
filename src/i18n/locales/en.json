@@ -138,7 +138,9 @@
     },
     "rateTitle": "Cost of one share per day",
     "rateUnits": "1 share-day in total | {count} share-days in total",
-    "rateRounded": "Rounded figure: the shares are worked out from the total, not by multiplying this rate."
+    "rateRounded": "Rounded figure: the shares are worked out from the total, not by multiplying this rate.",
+    "dayRate": "Per share-day",
+    "dayRateNote": "Per share-day: what one share cost each person per day. It differs from one person to the next, since it depends on what was spent while they were there. Rounded, indicative figure."
   },
   "currencies": {
     "XXX": "Generic (no country)",

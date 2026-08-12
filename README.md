@@ -21,9 +21,13 @@ qui suit est rattaché à celle-là.
 
 Également :
 
-- **Trois méthodes de répartition** au choix — simple (total ÷ parts), au prorata
-  des jours (total ÷ parts ÷ jours), ou dépense par dépense selon les présents à sa
-  date. La méthode est enregistrée sur la vacance.
+- **Trois méthodes de répartition** au choix — dépense par dépense selon les présents
+  à sa date (par défaut, la plus fidèle aux faits), au prorata des jours
+  (total ÷ parts ÷ jours), ou simple (total ÷ parts). La méthode est enregistrée sur
+  la vacance.
+- **Coût d'une part par jour**, affiché à titre indicatif : une valeur unique au
+  prorata des jours, une par personne dépense par dépense — puisqu'elle dépend alors
+  des journées vécues par chacun.
 - **Virements optimisés** : le moins de paiements possible, et le moins
   d'interlocuteurs possible pour chacun.
 - **Devise au choix** (générique, €, £, $, CHF), indépendante de la langue.

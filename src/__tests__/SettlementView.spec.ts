@@ -82,9 +82,10 @@ describe('SettlementView', () => {
     const wrapper = mountView()
     await flushPromises()
 
+    // Name, shares, days, then the share owed.
     const owed = wrapper
       .findAll('.settlement-table tbody tr')
-      .map((row) => row.findAll('td')[2]!.text())
+      .map((row) => row.findAll('td')[3]!.text())
     expect(owed[0]).toContain('7.50')
     expect(owed[1]).toContain('2.50')
   })
@@ -148,7 +149,7 @@ describe('SettlementView', () => {
       expect(values).toEqual(['shares', 'shareDays', 'presence'])
     })
 
-    it('starts on the simple method, with no days column', async () => {
+    it('starts on the by-expense method, the truest to what happened', async () => {
       await selectVacation()
       addPerson('p1', 'Alice')
       await addExpense('p1', 1000)
@@ -156,7 +157,21 @@ describe('SettlementView', () => {
       const wrapper = mountView()
       await flushPromises()
 
-      expect((wrapper.find(select).element as HTMLSelectElement).value).toBe('shares')
+      expect((wrapper.find(select).element as HTMLSelectElement).value).toBe('presence')
+      expect(wrapper.text()).toContain('Days')
+    })
+
+    it('drops the days column on the simple method, which ignores dates', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice')
+      await addExpense('p1', 1000)
+
+      const wrapper = mountView()
+      await flushPromises()
+
+      await wrapper.find(select).setValue('shares')
+      await flushPromises()
+
       expect(wrapper.text()).not.toContain('Days')
     })
 
@@ -167,13 +182,13 @@ describe('SettlementView', () => {
 
       const wrapper = mountView()
       await flushPromises()
-      const simple = wrapper.find('.method-info').text()
+      const presence = wrapper.find('.method-info').text()
 
-      await wrapper.find(select).setValue('presence')
+      await wrapper.find(select).setValue('shares')
       await flushPromises()
 
-      const presence = wrapper.find('.method-info').text()
-      expect(presence).not.toBe(simple)
+      const simple = wrapper.find('.method-info').text()
+      expect(simple).not.toBe(presence)
       // Long enough to actually describe the rule, not a one-line label.
       expect(presence.split(/\s+/).length).toBeGreaterThan(30)
     })
@@ -235,6 +250,8 @@ describe('SettlementView', () => {
 
       const wrapper = mountView()
       await flushPromises()
+      await wrapper.find(select).setValue('shares')
+      await flushPromises()
       expect(wrapper.find('.rate').exists()).toBe(false)
 
       await wrapper.find(select).setValue('shareDays')
@@ -245,7 +262,7 @@ describe('SettlementView', () => {
       expect(wrapper.find('.rate-units').text()).toContain('15')
     })
 
-    it('hides the rate under the by-expense method, which has no single one', async () => {
+    it('gives no single rate under the by-expense method — there is none', async () => {
       await selectVacation()
       addPerson('p1', 'Alice')
       await addExpense('p1', 3000)
@@ -256,6 +273,42 @@ describe('SettlementView', () => {
       await flushPromises()
 
       expect(wrapper.find('.rate').exists()).toBe(false)
+    })
+
+    it('gives each person their own rate under the by-expense method', async () => {
+      await selectVacation()
+      // Alice stays for both expenses, Bob only for the first. Same shares,
+      // different rates — which is the whole point of showing one per person.
+      addPerson('p1', 'Alice', 1, '2025-07-01', '2025-07-02')
+      addPerson('p2', 'Bob', 1, '2025-07-01', '2025-07-01')
+      await addExpense('p1', 1000, '2025-07-01')
+      await addExpense('p1', 1000, '2025-07-02')
+
+      const wrapper = mountView()
+      await flushPromises()
+
+      const rates = wrapper
+        .findAll('.settlement-table tbody tr')
+        .map((row) => row.find('.rate-cell').text())
+
+      // Alice: 5 + 10 = 15 over 2 days. Bob: 5 over 1 day.
+      expect(rates).toEqual(expect.arrayContaining([expect.stringMatching(/7[.,]50/)]))
+      expect(rates).toEqual(expect.arrayContaining([expect.stringMatching(/5[.,]00/)]))
+    })
+
+    it('shows no per-person rate under the two group-wide methods', async () => {
+      await selectVacation()
+      addPerson('p1', 'Alice')
+      await addExpense('p1', 3000)
+
+      const wrapper = mountView()
+      await flushPromises()
+
+      for (const method of ['shares', 'shareDays']) {
+        await wrapper.find(select).setValue(method)
+        await flushPromises()
+        expect(wrapper.find('.rate-cell').exists()).toBe(false)
+      }
     })
 
     it('says the rate is rounded, so nobody reads it as a contradiction', async () => {
@@ -269,7 +322,7 @@ describe('SettlementView', () => {
       await flushPromises()
 
       // 10 over 3 never falls on a round number of cents.
-      expect(wrapper.find('.rate-note').text().length).toBeGreaterThan(0)
+      expect(wrapper.find('.rate .rate-note').text().length).toBeGreaterThan(0)
     })
 
     it('stores the choice on the vacation so it survives a reload', async () => {
@@ -299,7 +352,8 @@ describe('SettlementView', () => {
       await flushPromises()
 
       vi.mocked(vacationStorage.save).mockRejectedValueOnce(new Error('quota'))
-      await wrapper.find(select).setValue('presence')
+      // Something other than the current method, or there is nothing to save.
+      await wrapper.find(select).setValue('shareDays')
       await flushPromises()
 
       expect(wrapper.find('.form-failure').exists()).toBe(true)
