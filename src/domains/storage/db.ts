@@ -328,6 +328,23 @@ export function pruneOrphanRecords(): Promise<CascadeReport> {
   })
 }
 
+/**
+ * Écrit une vacance importée **et tout son contenu** en une seule transaction.
+ * Même exigence que la cascade de suppression, dans l'autre sens : un import
+ * interrompu ne doit pas laisser une vacance sans ses dépenses.
+ */
+export function saveVacationBundle(
+  vacation: Vacation,
+  people: readonly Person[],
+  expenses: readonly Expense[],
+): Promise<void> {
+  return transaction([ROOT_STORE, ...VACATION_OWNED_STORES], 'readwrite', async (tx) => {
+    tx.objectStore(ROOT_STORE).put(vacation)
+    for (const person of people) tx.objectStore('people').put(person)
+    for (const expense of expenses) tx.objectStore('expenses').put(expense)
+  })
+}
+
 // --- Public API per domain --------------------------------------------------
 
 export const vacationStorage = {

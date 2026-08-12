@@ -28,13 +28,15 @@ qui suit est rattaché à celle-là.
   d'interlocuteurs possible pour chacun.
 - **Devise au choix** (générique, €, £, $, CHF), indépendante de la langue.
 - **FR / EN**, avec préférence conservée.
+- **Import / export** d'un fichier `.divvy` : exporter une vacance, la partager via
+  la feuille d'envoi du téléphone, ou en réimporter une. Un import n'écrase jamais
+  ce qui est déjà là — voir `specs/08-import-export.md`.
 - Reprise depuis le stockage local : les vacances enregistrées sont retrouvées au
   démarrage. La *sélection*, elle, est volontairement remise à zéro — on rechoisit
   la vacance à éditer à chaque ouverture.
 
 ### À venir
 
-- Import / export d'un fichier `.divvy`
 - Restriction des dépenses à partir d'une date donnée
 
 ## 💶 Exactitude des montants

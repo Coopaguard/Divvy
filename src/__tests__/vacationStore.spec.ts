@@ -257,4 +257,108 @@ describe('vacationStore', () => {
       expect(store.sortedVacations.map((item) => item.id)).toEqual(['recent', 'middle', 'old'])
     })
   })
+
+  describe('transfer', () => {
+    it('collects a vacation with its people and expenses', async () => {
+      const { peopleStorage, expenseStorage } = await import('@/domains/storage/db')
+      const store = useVacationStore()
+      const created = await store.createVacation({
+        name: 'Trip',
+        startDate: '2025-07-01',
+        endDate: '2025-07-10',
+      })
+
+      const bundle = await store.collectBundle(created!.id)
+
+      expect(bundle?.vacation.id).toBe(created!.id)
+      expect(vi.mocked(peopleStorage.getByVacationId)).toHaveBeenCalledWith(created!.id)
+      expect(vi.mocked(expenseStorage.getByVacationId)).toHaveBeenCalledWith(created!.id)
+    })
+
+    it('collects a vacation that is not the selected one', async () => {
+      const store = useVacationStore()
+      const other = await store.createVacation({
+        name: 'Other',
+        startDate: '2025-01-01',
+        endDate: '2025-01-10',
+      })
+      await store.createVacation({ name: 'Selected', startDate: '2025-02-01', endDate: '2025-02-10' })
+
+      // Exporting happens from the list, without opening the vacation first.
+      expect((await store.collectBundle(other!.id))?.vacation.name).toBe('Other')
+    })
+
+    it('returns nothing for an unknown vacation', async () => {
+      expect(await useVacationStore().collectBundle('nope')).toBeNull()
+    })
+
+    it('imports a bundle under fresh ids and selects it', async () => {
+      const { saveVacationBundle } = await import('@/domains/storage/db')
+      const store = useVacationStore()
+
+      const imported = await store.importBundle({
+        vacation: {
+          id: 'v1',
+          name: 'Imported',
+          startDate: '2025-07-01',
+          endDate: '2025-07-10',
+          createdAt: '',
+          updatedAt: '',
+        },
+        people: [],
+        expenses: [],
+      })
+
+      expect(imported?.name).toBe('Imported')
+      expect(imported?.id).not.toBe('v1')
+      expect(store.selectedId).toBe(imported?.id)
+      expect(store.vacations).toHaveLength(1)
+      expect(vi.mocked(saveVacationBundle)).toHaveBeenCalled()
+    })
+
+    it('never overwrites: the same bundle imported twice gives two vacations', async () => {
+      const store = useVacationStore()
+      const bundle = {
+        vacation: {
+          id: 'v1',
+          name: 'Twice',
+          startDate: '2025-07-01',
+          endDate: '2025-07-10',
+          createdAt: '',
+          updatedAt: '',
+        },
+        people: [],
+        expenses: [],
+      }
+
+      const first = await store.importBundle(bundle)
+      const second = await store.importBundle(bundle)
+
+      expect(store.vacations).toHaveLength(2)
+      expect(first?.id).not.toBe(second?.id)
+    })
+
+    it('reports a failed import without touching the list', async () => {
+      const { saveVacationBundle } = await import('@/domains/storage/db')
+      vi.mocked(saveVacationBundle).mockRejectedValueOnce(new Error('quota'))
+      const store = useVacationStore()
+
+      const imported = await store.importBundle({
+        vacation: {
+          id: 'v1',
+          name: 'Doomed',
+          startDate: '2025-07-01',
+          endDate: '2025-07-10',
+          createdAt: '',
+          updatedAt: '',
+        },
+        people: [],
+        expenses: [],
+      })
+
+      expect(imported).toBeNull()
+      expect(store.vacations).toHaveLength(0)
+      expect(store.error).toBe('quota')
+    })
+  })
 })
