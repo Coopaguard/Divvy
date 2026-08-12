@@ -1,6 +1,11 @@
 // Tests: browser side of the transfer — sharing capability and outcomes
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { canShareFiles, readFileText, shareFile } from '@/domains/importExport/file'
+import {
+  canShareFiles,
+  readFileText,
+  shareCandidates,
+  shareFile,
+} from '@/domains/importExport/file'
 
 const original = { canShare: navigator.canShare, share: navigator.share }
 
@@ -15,15 +20,44 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+describe('shareCandidates', () => {
+  it('offers the app format first, then ever more ordinary ones', () => {
+    expect(shareCandidates('corse.divvy').map((c) => c.name)).toEqual([
+      'corse.divvy',
+      'corse.divvy.json',
+      'corse.divvy.txt',
+    ])
+  })
+
+  it('ends on a type every browser will share', () => {
+    const candidats = shareCandidates('corse.divvy')
+    const last = candidats[candidats.length - 1]!
+    expect(last.type).toBe('text/plain')
+  })
+
+  it('does not double the extension', () => {
+    expect(shareCandidates('corse').map((c) => c.name)[0]).toBe('corse.divvy')
+  })
+})
+
 describe('canShareFiles', () => {
   it('is false when the browser cannot share at all', () => {
     stubNavigator({ canShare: undefined })
     expect(canShareFiles()).toBe(false)
   })
 
-  it('is false when the browser shares, but not files', () => {
+  it('is false when the browser shares nothing we can offer', () => {
     stubNavigator({ canShare: () => false })
     expect(canShareFiles()).toBe(false)
+  })
+
+  it('is true when only the plainest wrapping is accepted', () => {
+    // Chrome only shares a known list of file types, and `.divvy` is not on it.
+    // Without the fallback the option would be missing on every phone.
+    stubNavigator({
+      canShare: (data: ShareData) => data.files?.[0]?.name.endsWith('.txt') === true,
+    })
+    expect(canShareFiles()).toBe(true)
   })
 
   it('is false when probing throws', () => {
@@ -47,13 +81,31 @@ describe('shareFile', () => {
     expect(await shareFile('x.divvy', '{}')).toBe('unsupported')
   })
 
-  it('shares the file', async () => {
+  it('shares the file under our own extension when allowed', async () => {
     const share = vi.fn<(data: ShareData) => Promise<void>>().mockResolvedValue(undefined)
     stubNavigator({ canShare: () => true, share })
 
     expect(await shareFile('corse.divvy', '{"a":1}')).toBe('shared')
     const shared = share.mock.calls[0]![0].files![0] as File
     expect(shared.name).toBe('corse.divvy')
+  })
+
+  it('falls back to a wrapping the browser accepts, contents unchanged', async () => {
+    const share = vi.fn<(data: ShareData) => Promise<void>>().mockResolvedValue(undefined)
+    stubNavigator({
+      canShare: (data: ShareData) => data.files?.[0]?.name.endsWith('.txt') === true,
+      share,
+    })
+
+    expect(await shareFile('corse.divvy', '{"a":1}')).toBe('shared')
+    const shared = share.mock.calls[0]![0].files![0] as File
+    expect(shared.name).toBe('corse.divvy.txt')
+    expect(await shared.text()).toBe('{"a":1}')
+  })
+
+  it('reports unsupported only when no wrapping at all is accepted', async () => {
+    stubNavigator({ canShare: () => false, share: vi.fn<(data: ShareData) => Promise<void>>() })
+    expect(await shareFile('corse.divvy', '{}')).toBe('unsupported')
   })
 
   it('treats a dismissed share sheet as a cancellation, not a failure', async () => {

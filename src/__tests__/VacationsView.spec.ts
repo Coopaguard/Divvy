@@ -290,6 +290,19 @@ describe('VacationsView', () => {
       expect(useVacationStore().vacations.map((v) => v.name)).toEqual(['Existing', 'Imported'])
     })
 
+    it('imports a file that came back from a share under another extension', async () => {
+      // A phone may only accept sharing our file as text/plain; what matters on
+      // the way back is the contents, not the name.
+      const original = await bundleFileFor('Partagée')
+      const wrapper = mountView()
+      await choose(
+        wrapper,
+        new File([await original.text()], 'partagee.divvy.txt', { type: 'text/plain' }),
+      )
+
+      expect(useVacationStore().vacation?.name).toBe('Partagée')
+    })
+
     it('rejects a file that is not a .divvy', async () => {
       const wrapper = mountView()
       await choose(wrapper, new File(['hello'], 'notes.txt', { type: 'text/plain' }))
