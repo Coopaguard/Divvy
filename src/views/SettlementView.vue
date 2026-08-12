@@ -10,6 +10,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import { usePeopleStore } from '@/stores/peopleStore'
 import { useVacationStore } from '@/stores/vacationStore'
 import { computeBalances, optimiseTransfers } from '@/domains/settlement/settle'
+import { SPLIT_METHODS, type SplitMethod } from '@/domains/settlement/types'
 import { formatCents } from '@/domains/shared/money'
 import { useCurrency } from '@/ui/composables/useCurrency'
 
@@ -21,14 +22,24 @@ const expenseStore = useExpenseStore()
 
 const failure = ref<string | null>(null)
 
-const byPresence = computed({
-  get: () => vacationStore.splitMethod === 'presence',
-  set: async (checked: boolean) => {
+const method = computed({
+  get: () => vacationStore.splitMethod,
+  set: async (chosen: SplitMethod) => {
     failure.value = null
-    const saved = await vacationStore.setSplitMethod(checked ? 'presence' : 'shares')
+    const saved = await vacationStore.setSplitMethod(chosen)
     if (!saved) failure.value = t('common.error.saveFailed')
   },
 })
+
+const methodOptions = computed(() =>
+  SPLIT_METHODS.map((name) => ({ name, label: t(`settlement.methods.${name}`) })),
+)
+
+/** The formula in words, so the figures below can be checked by hand. */
+const methodHint = computed(() => t(`settlement.methodHints.${vacationStore.splitMethod}`))
+
+/** Days only weigh under the day-based methods; showing them otherwise misleads. */
+const showsDays = computed(() => vacationStore.splitMethod !== 'shares')
 
 const balances = computed(() =>
   computeBalances(peopleStore.people, expenseStore.expenses, {
@@ -75,13 +86,15 @@ function personName(id: string): string {
     <p v-if="!hasSomethingToSettle" class="empty-state">{{ t('settlement.empty') }}</p>
 
     <template v-else>
-      <label class="option">
-        <input v-model="byPresence" type="checkbox" />
-        <span>
-          <span class="option-label">{{ t('settlement.presence') }}</span>
-          <span class="option-hint">{{ t('settlement.presenceHint') }}</span>
-        </span>
-      </label>
+      <div class="option">
+        <label class="option-label" for="split-method">{{ t('settlement.method') }}</label>
+        <select id="split-method" v-model="method" class="method-select">
+          <option v-for="entry in methodOptions" :key="entry.name" :value="entry.name">
+            {{ entry.label }}
+          </option>
+        </select>
+        <p class="option-hint">{{ methodHint }}</p>
+      </div>
 
       <p v-if="failure" class="form-failure" role="alert">{{ failure }}</p>
 
@@ -92,7 +105,7 @@ function personName(id: string): string {
             <tr>
               <th>{{ t('people.fields.name') }}</th>
               <th class="numeric">{{ t('people.fields.shares') }}</th>
-              <th v-if="byPresence" class="numeric">{{ t('settlement.days') }}</th>
+              <th v-if="showsDays" class="numeric">{{ t('settlement.days') }}</th>
               <th class="numeric">{{ t('settlement.owed') }}</th>
               <th class="numeric">{{ t('results.paid') }}</th>
               <th class="numeric">{{ t('settlement.balance') }}</th>
@@ -102,7 +115,7 @@ function personName(id: string): string {
             <tr v-for="balance in sortedBalances" :key="balance.personId">
               <td>{{ balance.name }}</td>
               <td class="numeric">{{ balance.shares }}</td>
-              <td v-if="byPresence" class="numeric">{{ balance.days }}</td>
+              <td v-if="showsDays" class="numeric">{{ balance.days }}</td>
               <td class="numeric">{{ amount(balance.owedCents) }}</td>
               <td class="numeric">{{ amount(balance.paidCents) }}</td>
               <td
@@ -118,7 +131,7 @@ function personName(id: string): string {
           </tbody>
           <tfoot>
             <tr>
-              <td :colspan="byPresence ? 3 : 2">{{ t('expenses.total') }}</td>
+              <td :colspan="showsDays ? 3 : 2">{{ t('expenses.total') }}</td>
               <td class="numeric total">{{ amount(totalCents) }}</td>
               <td class="numeric total">{{ amount(totalCents) }}</td>
               <td />
@@ -171,24 +184,16 @@ function personName(id: string): string {
 
 .option {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
+  flex-direction: column;
+  gap: var(--space-xs);
   padding: var(--space-md);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  cursor: pointer;
 }
 
-/* The design system stretches inputs to full width, which is right for text
-   fields and wrong for a checkbox — left as is, it pushed the whole page. */
-.option input[type='checkbox'] {
-  width: auto;
-  flex: none;
-  margin-top: 2px;
-}
-
-.option > span {
-  min-width: 0;
+.method-select {
+  width: 100%;
+  max-width: 26rem;
 }
 
 .option-label {

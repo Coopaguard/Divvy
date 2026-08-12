@@ -140,6 +140,66 @@ describe('computeBalances — shares', () => {
   })
 })
 
+describe('computeBalances — shareDays', () => {
+  const options = { method: 'shareDays' as const, vacation }
+
+  it('charges a share by the day', () => {
+    // A: 10 days, B: 5 days → 15 share-days, 30 € → 2 €/share-day.
+    const a = person('a', 1, '2025-07-01', '2025-07-10')
+    const b = person('b', 1, '2025-07-06', '2025-07-10')
+    const balances = computeBalances([a, b], [expense('a', 3000)], options)
+
+    expect(balances.map((balance) => balance.days)).toEqual([10, 5])
+    expect(balances.map((balance) => balance.owedCents)).toEqual([2000, 1000])
+  })
+
+  it('combines shares and days', () => {
+    // A: 2 shares × 10 days = 20; B: 1 share × 5 days = 5 → 25 units.
+    const a = person('a', 2, '2025-07-01', '2025-07-10')
+    const b = person('b', 1, '2025-07-06', '2025-07-10')
+    const balances = computeBalances([a, b], [expense('a', 2500)], options)
+
+    expect(balances.map((balance) => balance.owedCents)).toEqual([2000, 500])
+  })
+
+  it('spreads every expense across the stays, dates of spending ignored', () => {
+    // The difference with `presence`: B left on the 2nd yet still carries a
+    // fraction of the expense dated the 8th, because the whole total is spread.
+    const a = person('a', 1, '2025-07-01', '2025-07-10')
+    const b = person('b', 1, '2025-07-01', '2025-07-02')
+    const balances = computeBalances([a, b], [expense('a', 1200, '2025-07-08')], options)
+
+    expect(balances[1]!.owedCents).toBeGreaterThan(0)
+    expect(sumOwed(balances)).toBe(1200)
+  })
+
+  it('charges nothing to someone who was never there', () => {
+    const away = person('b', 1, '2025-09-01', '2025-09-02')
+    const balances = computeBalances([person('a'), away], [expense('a', 1000)], options)
+    expect(balances[1]!.owedCents).toBe(0)
+    expect(balances[0]!.owedCents).toBe(1000)
+  })
+
+  it('still sums to the exact total', () => {
+    const a = person('a', 1, '2025-07-01', '2025-07-10')
+    const b = person('b', 1, '2025-07-04', '2025-07-06')
+    const c = person('c', 2, '2025-07-02', '2025-07-08')
+    const balances = computeBalances([a, b, c], [expense('a', 9997)], options)
+
+    expect(sumOwed(balances)).toBe(9997)
+    expect(sumBalance(balances)).toBe(0)
+  })
+
+  it('falls back to shares when no one has a usable day', () => {
+    const a = person('a', 1, '2025-01-01', '2025-01-02')
+    const b = person('b', 1, '2025-01-01', '2025-01-02')
+    const balances = computeBalances([a, b], [expense('a', 1000)], options)
+
+    expect(sumOwed(balances)).toBe(1000)
+    expect(balances.map((balance) => balance.owedCents)).toEqual([500, 500])
+  })
+})
+
 describe('computeBalances — presence', () => {
   const options = { method: 'presence' as const, vacation }
 
@@ -344,5 +404,24 @@ describe('settlement end to end', () => {
     // 90 € over three: 30 € each. A advanced 60, B 30, C nothing.
     expect(balances.map((balance) => balance.owedCents)).toEqual([3000, 3000, 3000])
     expect(transfers).toEqual([{ fromId: 'c', toId: 'a', amountCents: 3000 }])
+  })
+
+  it('the three methods differ on the same data, and all balance', () => {
+    const a = person('a', 1, '2025-07-01', '2025-07-10')
+    const b = person('b', 1, '2025-07-01', '2025-07-02')
+    const expenses = [expense('a', 1000, '2025-07-02'), expense('a', 1000, '2025-07-08')]
+
+    const owed = (method: 'shares' | 'shareDays' | 'presence') =>
+      computeBalances([a, b], expenses, { method, vacation }).map((x) => x.owedCents)
+
+    // Simple: half each. By day: B carries 2 of the 12 share-days. By expense:
+    // B only takes half of the one they were there for.
+    expect(owed('shares')).toEqual([1000, 1000])
+    expect(owed('shareDays')).toEqual([1667, 333])
+    expect(owed('presence')).toEqual([1500, 500])
+
+    for (const method of ['shares', 'shareDays', 'presence'] as const) {
+      expect(owed(method).reduce((sum, value) => sum + value, 0)).toBe(2000)
+    }
   })
 })

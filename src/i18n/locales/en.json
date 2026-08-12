@@ -125,8 +125,17 @@
     "balance": "Balance",
     "allSquare": "Everyone is square — nothing to reimburse.",
     "transferCount": "1 payment settles everything | {count} payments settle everything",
-    "presence": "Only share each expense between those present that day",
-    "presenceHint": "An expense is only charged to the people there on its date, in proportion to their shares. Someone who left the day before does not pay for the next day’s expense."
+    "method": "Split method",
+    "methods": {
+      "shares": "Simple — total ÷ shares",
+      "shareDays": "Pro rata by day — total ÷ shares ÷ days",
+      "presence": "Pro rata by expense — expense ÷ day ÷ shares"
+    },
+    "methodHints": {
+      "shares": "The total is shared between everyone in proportion to their shares. Dates do not count.",
+      "shareDays": "The total is spread over shares and days of presence: a share costs a price per day. Every expense is spread evenly across the stays, including onto people who had already left.",
+      "presence": "Each expense is shared only between the people there on its date, in proportion to their shares. Someone who left the day before does not pay for the next day’s expense."
+    }
   },
   "currencies": {
     "XXX": "Generic (no country)",
