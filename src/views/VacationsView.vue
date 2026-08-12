@@ -176,12 +176,14 @@ async function confirmDelete(): Promise<void> {
         <button class="btn-primary" @click="showNewForm = true">
           {{ t('vacations.new') }}
         </button>
-        <!-- Hors flux : le bouton ci-dessus lui sert de déclencheur. -->
+        <!-- Hors flux : le bouton ci-dessus lui sert de déclencheur. Le filtre
+             reste large : un fichier revenu d'un partage peut porter une autre
+             extension, et c'est le contenu qui fait foi, pas le nom. -->
         <input
           ref="fileInput"
           type="file"
           class="file-input"
-          accept=".divvy,application/json"
+          accept=".divvy,.json,.txt,application/json,text/plain"
           @change="onFileChosen"
         />
       </div>

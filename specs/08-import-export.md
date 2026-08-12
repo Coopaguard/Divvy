@@ -34,10 +34,23 @@ acceptable.
 
 - **Exporter** — téléchargement du fichier, nommé d'après le titre de la vacance
   (accents et ponctuation retirés ; un titre vide retombe sur `vacances.divvy`).
-- **Partager** — feuille de partage du système. **Proposé uniquement là où il
-  fonctionne** : le partage de fichiers demande un contexte sécurisé et n'existe
-  pas sur la plupart des navigateurs de bureau. Refermer la feuille sans envoyer
-  n'est pas une erreur et ne dit rien à l'utilisateur.
+- **Partager** — feuille de partage du système, vers les applications de
+  messagerie. Refermer la feuille sans envoyer n'est pas une erreur et ne dit
+  rien à l'utilisateur.
+
+  **Proposé uniquement là où il fonctionne** : le partage de fichiers demande un
+  contexte sécurisé et n'existe pas sur la plupart des navigateurs de bureau.
+
+  Les navigateurs n'acceptent par ailleurs de partager qu'une **liste de types de
+  fichiers**, et `.divvy` n'y figure pas. Sans repli, l'action serait donc
+  invisible partout, y compris sur téléphone. Le même contenu est présenté sous
+  des habillages successifs — `.divvy`, puis `.divvy.json`, puis `.divvy.txt` en
+  `text/plain` — et le premier accepté est envoyé. Seuls le nom et le type
+  annoncés changent ; les octets sont identiques.
+
+  La lecture validant le **contenu et non l'extension**, un fichier revenu d'un
+  partage se réimporte sans rien perdre. Le sélecteur de fichier accepte donc
+  aussi `.json` et `.txt`.
 
 Les deux partent du même contenu sérialisé, et fonctionnent depuis la **liste**,
 sans avoir à ouvrir la vacance au préalable.
