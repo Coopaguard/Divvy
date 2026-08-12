@@ -8,6 +8,7 @@ import { useExpenseStore } from '@/stores/expenseStore'
 import PersonForm from './PersonForm.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import RowActions from './RowActions.vue'
+import type { RowAction } from './RowActions.vue'
 import type { Person, PersonDraft } from '@/domains/people/types'
 
 const { t } = useI18n()
@@ -25,6 +26,16 @@ function openAdd(): void {
   editingPerson.value = null
   failure.value = null
   showForm.value = true
+}
+
+const rowActions = computed<RowAction[]>(() => [
+  { key: 'edit', label: t('common.edit') },
+  { key: 'delete', label: t('common.delete'), danger: true },
+])
+
+function onRowAction(key: string, person: Person): void {
+  if (key === 'edit') openEdit(person)
+  else confirmDeleteId.value = person.id
 }
 
 function openEdit(person: Person): void {
@@ -114,7 +125,11 @@ function formatDate(date: string): string {
           <td>{{ formatDate(person.arrivalDate) }}</td>
           <td>{{ formatDate(person.departureDate) }}</td>
           <td class="actions-cell">
-            <RowActions @edit="openEdit(person)" @delete="confirmDeleteId = person.id" />
+            <RowActions
+              :actions="rowActions"
+              :label="t('common.actions')"
+              @select="onRowAction($event, person)"
+            />
           </td>
         </tr>
       </tbody>

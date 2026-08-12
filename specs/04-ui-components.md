@@ -71,11 +71,18 @@ Confirmation avant suppression.
 
 ### `RowActions`
 Actions d'une ligne de tableau : en clair à partir de 768 px, repliées sous un
-bouton « … » en dessous.
+bouton « … » en dessous. La liste d'actions est fournie par l'appelant — deux
+pour une personne ou une dépense, trois pour une vacance.
 
 ### `LanguageMenu` / `CurrencyMenu`
 Langue active et devise de l'application, chacune sous un menu. Chaque entrée est
 **nommée en toutes lettres** : un drapeau ou un symbole n'est jamais le seul indice.
+
+## Vue Vacances
+
+Outre la liste et la création, chaque ligne porte **Exporter**, **Partager** (là
+où le navigateur le permet) et **Supprimer** ; l'en-tête porte **Importer**. Voir
+`08-import-export.md`.
 
 ## Composables (`ui/composables/`)
 

@@ -28,6 +28,9 @@ qui suit est rattaché à celle-là.
   d'interlocuteurs possible pour chacun.
 - **Devise au choix** (générique, €, £, $, CHF), indépendante de la langue.
 - **FR / EN**, avec préférence conservée.
+- **Import / export** d'un fichier `.divvy` : exporter une vacance, la partager via
+  la feuille d'envoi du téléphone, ou en réimporter une. Un import n'écrase jamais
+  ce qui est déjà là — voir `specs/08-import-export.md`.
 - **Installable et hors ligne** : l'application s'installe sur téléphone et
   fonctionne sans réseau. Une nouvelle version est *proposée*, jamais imposée —
   voir `specs/09-pwa.md`.
@@ -37,7 +40,6 @@ qui suit est rattaché à celle-là.
 
 ### À venir
 
-- Import / export d'un fichier `.divvy`
 - Restriction des dépenses à partir d'une date donnée
 
 ## 💶 Exactitude des montants

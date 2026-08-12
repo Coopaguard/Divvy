@@ -144,6 +144,20 @@
     "USD": "Dollar américain",
     "CHF": "Franc suisse"
   },
+  "transfer": {
+    "export": "Exporter",
+    "share": "Partager",
+    "import": "Importer",
+    "errors": {
+      "notDivvy": "Ce fichier n’est pas un fichier .divvy",
+      "unsupportedVersion": "Fichier créé par une version plus récente de Divvy",
+      "invalidData": "Fichier .divvy illisible ou incomplet",
+      "readFailed": "Impossible de lire le fichier",
+      "importFailed": "Impossible d’enregistrer les données importées",
+      "exportFailed": "Impossible de rassembler les données à exporter",
+      "shareFailed": "Le partage a échoué"
+    }
+  },
   "update": {
     "available": "Une nouvelle version est disponible.",
     "reload": "Recharger",

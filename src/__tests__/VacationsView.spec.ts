@@ -9,6 +9,17 @@ import { globalPlugins } from './helpers'
 
 vi.mock('@/domains/storage/db', async () => (await import('./storageMock')).createStorageMock())
 
+// jsdom n'implémente pas createObjectURL ni le partage natif : la vue est
+// testée sur ce qu'elle demande, le module fichier l'étant séparément.
+vi.mock('@/domains/importExport/file', () => ({
+  downloadFile: vi.fn<(name: string, contents: string) => void>(),
+  shareFile: vi
+    .fn<(name: string, contents: string) => Promise<string>>()
+    .mockResolvedValue('shared'),
+  canShareFiles: vi.fn<() => boolean>().mockReturnValue(true),
+  readFileText: vi.fn<(blob: Blob) => Promise<string>>((blob) => blob.text()),
+}))
+
 describe('VacationsView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -190,5 +201,128 @@ describe('VacationsView', () => {
 
     expect(wrapper.find('.form-failure').exists()).toBe(true)
     expect(wrapper.find('form.new-form').exists()).toBe(true)
+  })
+
+  describe('transfer', () => {
+    async function bundleFileFor(name: string) {
+      const { serialiseBundle } = await import('@/domains/importExport/format')
+      const contents = serialiseBundle({
+        vacation: {
+          id: 'v1',
+          name,
+          startDate: '2026-07-01',
+          endDate: '2026-07-10',
+          createdAt: '',
+          updatedAt: '',
+        },
+        people: [
+          {
+            id: 'p1',
+            vacationId: 'v1',
+            name: 'Alice',
+            shares: 1,
+            arrivalDate: '2026-07-01',
+            departureDate: '2026-07-10',
+            createdAt: '',
+            updatedAt: '',
+          },
+        ],
+        expenses: [],
+      })
+      return new File([contents], 'trip.divvy', { type: 'application/json' })
+    }
+
+    async function choose(wrapper: ReturnType<typeof mount>, file: File) {
+      const input = wrapper.find('input[type="file"]').element as HTMLInputElement
+      Object.defineProperty(input, 'files', { value: [file], configurable: true })
+      await wrapper.find('input[type="file"]').trigger('change')
+      await flushPromises()
+    }
+
+    it('offers export, share and delete on a row', async () => {
+      await createVacation('Corse')
+      const wrapper = mountView()
+
+      const labels = wrapper.findAll('.inline-actions button').map((b) => b.text())
+      expect(labels).toEqual(['Export', 'Share', 'Delete'])
+    })
+
+    it('downloads the vacation, named after it', async () => {
+      const { downloadFile } = await import('@/domains/importExport/file')
+      await createVacation('Corse 2026')
+      const wrapper = mountView()
+
+      const exportButton = wrapper.findAll('.inline-actions button').find((b) => b.text() === 'Export')!
+      await exportButton.trigger('click')
+      await flushPromises()
+
+      const [name, contents] = vi.mocked(downloadFile).mock.calls[0]!
+      expect(name).toBe('corse-2026.divvy')
+      expect(JSON.parse(contents).vacation.name).toBe('Corse 2026')
+    })
+
+    it('hands the same file to the share sheet', async () => {
+      const { shareFile } = await import('@/domains/importExport/file')
+      await createVacation('Corse')
+      const wrapper = mountView()
+
+      const shareButton = wrapper.findAll('.inline-actions button').find((b) => b.text() === 'Share')!
+      await shareButton.trigger('click')
+      await flushPromises()
+
+      expect(vi.mocked(shareFile).mock.calls[0]![0]).toBe('corse.divvy')
+    })
+
+    it('imports a file as a new vacation and selects it', async () => {
+      const wrapper = mountView()
+      await choose(wrapper, await bundleFileFor('Imported'))
+
+      const store = useVacationStore()
+      expect(store.vacations).toHaveLength(1)
+      expect(store.vacation?.name).toBe('Imported')
+    })
+
+    it('never overwrites what is already there', async () => {
+      await createVacation('Existing')
+      const wrapper = mountView()
+      await choose(wrapper, await bundleFileFor('Imported'))
+
+      expect(useVacationStore().vacations.map((v) => v.name)).toEqual(['Existing', 'Imported'])
+    })
+
+    it('rejects a file that is not a .divvy', async () => {
+      const wrapper = mountView()
+      await choose(wrapper, new File(['hello'], 'notes.txt', { type: 'text/plain' }))
+
+      expect(wrapper.find('.form-failure').text()).toContain('not a .divvy')
+      expect(useVacationStore().vacations).toHaveLength(0)
+    })
+
+    it('says so when the file comes from a newer version', async () => {
+      const raw = JSON.parse(await (await bundleFileFor('Future')).text())
+      raw.version = 99
+      const wrapper = mountView()
+      await choose(wrapper, new File([JSON.stringify(raw)], 'future.divvy'))
+
+      expect(wrapper.find('.form-failure').text()).toContain('newer version')
+    })
+
+    it('says so when the contents do not hold together', async () => {
+      const raw = JSON.parse(await (await bundleFileFor('Broken')).text())
+      raw.people[0].shares = -3
+      const wrapper = mountView()
+      await choose(wrapper, new File([JSON.stringify(raw)], 'broken.divvy'))
+
+      expect(wrapper.find('.form-failure').text()).toContain('unreadable or incomplete')
+    })
+
+    it('hides sharing where the browser cannot do it', async () => {
+      const { canShareFiles } = await import('@/domains/importExport/file')
+      vi.mocked(canShareFiles).mockReturnValueOnce(false)
+
+      await createVacation('Corse')
+      const labels = mountView().findAll('.inline-actions button').map((b) => b.text())
+      expect(labels).toEqual(['Export', 'Delete'])
+    })
   })
 })

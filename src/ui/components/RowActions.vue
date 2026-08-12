@@ -2,42 +2,50 @@
 // RowActions — actions d'une ligne : en clair sur grand écran, sous un « … »
 // sur téléphone
 //
-// Deux boutons par ligne mangent toute la largeur utile d'un tableau sur mobile
-// et poussent les colonnes qui portent l'information. Repliés sous un menu, ils
-// restent à un geste sans disputer la place aux données.
-import { useI18n } from 'vue-i18n'
+// Deux boutons par ligne mangent déjà toute la largeur utile d'un tableau sur
+// mobile ; trois n'y tiennent pas. Repliés sous un menu, ils restent à un geste
+// sans disputer la place aux données.
 import { useDismissMenu } from '@/ui/composables/useDismissMenu'
 
-const { t } = useI18n()
+export interface RowAction {
+  key: string
+  label: string
+  /** Destructive: shown apart, in red. */
+  danger?: boolean
+}
 
-const emit = defineEmits<{ edit: []; delete: [] }>()
+defineProps<{ actions: readonly RowAction[]; label: string }>()
+const emit = defineEmits<{ select: [key: string] }>()
 
 const { open, root, toggle, close } = useDismissMenu()
 
-function run(action: 'edit' | 'delete'): void {
+function run(key: string): void {
   close()
-  if (action === 'edit') emit('edit')
-  else emit('delete')
+  emit('select', key)
 }
 </script>
 
 <template>
   <div ref="root" class="row-actions">
-    <!-- Wide screens: both actions in the open -->
+    <!-- Wide screens: every action in the open -->
     <div class="inline-actions">
-      <button class="btn-secondary btn-sm" type="button" @click="run('edit')">
-        {{ t('common.edit') }}
-      </button>
-      <button class="btn-danger btn-sm" type="button" @click="run('delete')">
-        {{ t('common.delete') }}
+      <button
+        v-for="action in actions"
+        :key="action.key"
+        type="button"
+        :class="action.danger ? 'btn-danger' : 'btn-secondary'"
+        class="btn-sm"
+        @click="run(action.key)"
+      >
+        {{ action.label }}
       </button>
     </div>
 
-    <!-- Phones: the same two actions behind a menu -->
+    <!-- Phones: the same actions behind a menu -->
     <button
       class="menu-trigger"
       type="button"
-      :aria-label="t('common.actions')"
+      :aria-label="label"
       :aria-expanded="open"
       aria-haspopup="menu"
       @click="toggle"
@@ -46,19 +54,15 @@ function run(action: 'edit' | 'delete'): void {
     </button>
 
     <ul v-if="open" class="menu" role="menu">
-      <li>
-        <button class="menu-item" type="button" role="menuitem" @click="run('edit')">
-          {{ t('common.edit') }}
-        </button>
-      </li>
-      <li>
+      <li v-for="action in actions" :key="action.key">
         <button
-          class="menu-item danger"
+          class="menu-item"
+          :class="{ danger: action.danger }"
           type="button"
           role="menuitem"
-          @click="run('delete')"
+          @click="run(action.key)"
         >
-          {{ t('common.delete') }}
+          {{ action.label }}
         </button>
       </li>
     </ul>

@@ -7,10 +7,17 @@
 
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { pruneOrphanRecords, vacationStorage } from '@/domains/storage/db'
+import {
+  expenseStorage,
+  peopleStorage,
+  pruneOrphanRecords,
+  saveVacationBundle,
+  vacationStorage,
+} from '@/domains/storage/db'
 import { generateId, nowIso } from '@/domains/shared/entity'
 import { useAsyncState } from './asyncState'
 import { DEFAULT_SPLIT_METHOD, type SplitMethod } from '@/domains/settlement/types'
+import { withFreshIds, type DivvyBundle } from '@/domains/importExport/format'
 import type { Vacation, VacationDraft } from '@/domains/vacations/types'
 
 export const useVacationStore = defineStore('vacations', () => {
@@ -114,6 +121,42 @@ export const useVacationStore = defineStore('vacations', () => {
   }
 
   /**
+   * Rassemble une vacance et tout son contenu, quelle qu'elle soit — pas
+   * seulement la sélectionnée : on exporte depuis la liste, sans avoir à
+   * ouvrir la vacance d'abord.
+   */
+  async function collectBundle(id: string): Promise<DivvyBundle | null> {
+    const vacation = vacations.value.find((item) => item.id === id)
+    if (!vacation) return null
+
+    const result = await run(async () => ({
+      people: await peopleStorage.getByVacationId(id),
+      expenses: await expenseStorage.getByVacationId(id),
+    }))
+    if (!result.ok) return null
+
+    return { vacation, people: result.value.people, expenses: result.value.expenses }
+  }
+
+  /**
+   * Enregistre un contenu importé sous des identifiants neufs et le
+   * sélectionne. Rien n'est écrasé : réimporter le même fichier crée une
+   * seconde vacance, ce qui se corrige, là où un écrasement ne se corrigerait
+   * pas.
+   */
+  async function importBundle(bundle: DivvyBundle): Promise<Vacation | null> {
+    const fresh = withFreshIds(bundle)
+    const result = await run(() =>
+      saveVacationBundle(fresh.vacation, fresh.people, fresh.expenses),
+    )
+    if (!result.ok) return null
+
+    vacations.value.push(fresh.vacation)
+    selectedId.value = fresh.vacation.id
+    return fresh.vacation
+  }
+
+  /**
    * Supprime une vacance **et tout ce qui lui est rattaché** (Personnes, puis
    * Dépenses et répartition). Sans argument, supprime la vacance sélectionnée.
    * Retourne false si la suppression a échoué — dans ce cas rien n'a été
@@ -142,6 +185,8 @@ export const useVacationStore = defineStore('vacations', () => {
     hasVacation,
     splitMethod,
     setSplitMethod,
+    collectBundle,
+    importBundle,
     loadFromStorage,
     select,
     clearSelection,
